@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { useFrame, type ThreeEvent } from '@react-three/fiber'
-import { useGame } from '../game/store'
+import { useGame, piecesAt } from '../game/store'
 import type { Piece } from '../game/pieces'
 import { makePiece, sqPos } from './geometry'
 import { onSquareClick } from './input'
@@ -69,7 +69,10 @@ function PieceMesh({ piece, selected }: { piece: Piece; selected: boolean }) {
 }
 
 export function Pieces() {
-  const pieces = useGame(s => s.pieces)
+  const live = useGame(s => s.pieces)
+  const history = useGame(s => s.history)
+  const viewPly = useGame(s => s.viewPly)
+  const pieces = useMemo(() => (viewPly === null ? live : piecesAt(history, viewPly)), [live, history, viewPly])
   const selected = useGame(s => s.selected)
   const gameId = useGame(s => s.gameId)
   return (

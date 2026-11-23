@@ -21,6 +21,9 @@ export interface GameState {
   lastMove: { from: string; to: string } | null
   pendingPromotion: { from: string; to: string } | null
   gameId: number
+  /** Review mode: show the position after this many plies (null = live). */
+  viewPly: number | null
+  setViewPly(p: number | null): void
   newGame(o: NewGameOptions): void
   loadFen(fen: string): void
   legalMoves(square: string): Move[]
@@ -44,6 +47,7 @@ const snapshot = (pieces: Piece[]) => {
     selected: null,
     pendingPromotion: null,
     lastMove: last ? { from: last.from, to: last.to } : null,
+    viewPly: null,
   }
 }
 
@@ -60,6 +64,8 @@ export const useGame = create<GameState>((set, get) => ({
   lastMove: null,
   pendingPromotion: null,
   gameId: 0,
+  viewPly: null,
+  setViewPly: p => set({ viewPly: p, selected: null }),
 
   newGame({ color, level, minutes }) {
     chess = new Chess()
@@ -124,3 +130,11 @@ export const useGame = create<GameState>((set, get) => ({
 
   turn: () => chess.turn(),
 }))
+
+/** Pieces after the first `ply` moves, replayed from the start so ids match the live game. */
+export function piecesAt(history: Move[], ply: number): Piece[] {
+  const c = new Chess()
+  let p = initialPieces()
+  for (const h of history.slice(0, ply)) p = applyMove(p, c.move(h.san))
+  return p
+}
