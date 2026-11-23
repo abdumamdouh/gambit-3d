@@ -17,10 +17,12 @@
     "@react-three/fiber": "^9.8.2",
     "@react-three/postprocessing": "^3.2.2",
     "chess.js": "^1.4.0",
+    "postprocessing": "^6.39.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "stockfish": "^17.1.0",
     "three": "^0.187.0",
+    "three-stdlib": "^2.36.1",
     "zustand": "^5.1.0"
   },
   "devDependencies": {
