@@ -1,8 +1,9 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 import type { ThreeEvent } from '@react-three/fiber'
 import { M, glow, labelTexture, sqPos } from './geometry'
 import { onSquareClick } from './input'
+import { useGame } from '../game/store'
 
 export function Board() {
   const group = useMemo(() => {
@@ -35,10 +36,15 @@ export function Board() {
         const p = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ map: labelTexture(txt), transparent: true }))
         p.rotation.x = -Math.PI / 2
         p.position.set(x, -0.055, z)
+        p.userData.label = true
         g.add(p)
       }
     return g
   }, [])
+
+  // Labels face the player: turn them 180° when playing Black.
+  const color = useGame(s => s.playerColor)
+  useEffect(() => { group.children.forEach(c => { if (c.userData.label) c.rotation.set(-Math.PI / 2, 0, color === 'b' ? Math.PI : 0) }) }, [color, group])
 
   const click = (e: ThreeEvent<MouseEvent>) => {
     const sq = e.object.userData.square as string | undefined

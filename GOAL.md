@@ -10,11 +10,11 @@ Spec: `docs/superpowers/specs/2026-11-23-gambit-3d-design.md` · Loops: `docs/lo
 | 2 | M2a Coach — eval bar, hint, blunder guard | done | main | 2026-11-23, + zoom buttons |
 | 3 | M2b Game review — labels, 3D arrows, explanations (templates + Qwen) | done | main | 2026-11-23 |
 | 4 | M2c Progress — Skill Report, IndexedDB, dashboard, weekly verdict | done | main | 2026-11-23 |
-| 5 | M3 Academy — placement test + 6 stages | not started | | |
-| 6 | M4 Tactics — puzzles, rating, spaced repetition | not started | | |
-| 7 | M5a Online — Lichess OAuth + Board API | not started | | |
-| 8 | M5b Online — P2P friend link | not started | | |
-| 9 | M6 Polish — themes, sounds, PGN, mobile, presets | in progress | main | 4 themes shipped early (owner request) |
+| 5 | M3 Academy — placement test + 6 stages | done | main | 2026-11-23 |
+| 6 | M4 Tactics — puzzles, rating, spaced repetition | done | main | 2026-11-23 |
+| 7 | M5a Online — Lichess OAuth + Board API | done | main | 2026-11-23 |
+| 8 | M5b Online — P2P friend link | done | main | 2026-11-23 |
+| 9 | M6 Polish — themes, sounds, PGN, mobile, presets | done | main | 2026-11-23 |
 
 ### 2 — M2a Coach
 - Eval bar driven by engine `analyse()` (depth 12) after every move; white-bottom, smooth animation.
@@ -54,7 +54,8 @@ Spec: `docs/superpowers/specs/2026-11-23-gambit-3d-design.md` · Loops: `docs/lo
 
 (Findings raised by verifiers on out-of-scope problems. Drained BEFORE new backlog rows.)
 
-- Rank labels read upside-down when playing Black (labels sit on the left frame edge only). Fix in M6 or earlier.
+- ~~Rank labels upside-down for Black~~ fixed in M6.
+- Lichess online play is built but not tested with a real account (needs the owner to sign in).
 - Bundle is 392 kB gzip in one chunk; code-split the scene if first paint gets slow.
 
 ## Loop log

@@ -10,6 +10,9 @@ import { refreshEval } from './coach/actions'
 import { useCoach } from './coach/coach-store'
 import { useReview, runReview } from './coach/review-store'
 import './scene/themes'
+import { initSound } from './polish/sound'
+
+initSound()
 import { useTrain, checkTrainResult } from './train/session'
 import { useOnline, joinFriendGame, initLichess } from './online/session'
 

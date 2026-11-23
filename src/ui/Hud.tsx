@@ -13,6 +13,8 @@ import { ProgressDialog } from './ProgressDialog'
 import { ThemePicker } from './ThemePicker'
 import { AcademyDialog, TacticsDialog, TrainPanel } from './TrainUi'
 import { OnlineDialog } from './OnlineUi'
+import { exportPgn } from '../polish/pgn'
+import { useSettings } from '../polish/settings'
 import { useOnline, resignOnline, leaveOnline } from '../online/session'
 import { useTrain, exitTrain } from '../train/session'
 
@@ -78,6 +80,7 @@ export function Hud() {
   const training = useTrain(s => s.kind !== null)
   const online = useOnline()
   const isOnline = g.mode === 'online'
+  const flat = useSettings(s => s.quality) === 'flat'
   const coach = useCoachText()
   const movesRef = useRef<HTMLDivElement>(null)
   const opp: Color = g.playerColor === 'w' ? 'b' : 'w'
@@ -132,11 +135,12 @@ export function Hud() {
         <div className="actions">
           <button className="hint" onClick={() => showHint()} disabled={g.result.over || app.thinking || g.turn() !== g.playerColor || isOnline}>💡 Hint</button>
           <button onClick={() => runReview()} disabled={!g.result.over}>🔍 Review</button>
+          <button onClick={exportPgn} disabled={!g.history.length} title="Download this game as PGN">⤓ PGN</button>
         </div>
         <Toggles />
       </aside>}
 
-      <nav id="cams" className="glass">
+      {!flat && <nav id="cams" className="glass">
         {(['player', 'top', 'low', 'orbit'] as CamPreset[]).map(c => (
           <button key={c} className={cam === c ? 'on' : ''} onClick={() => setCam(c)}>
             {{ player: 'Player', top: 'Top', low: 'Low angle', orbit: 'Cinematic' }[c]}
@@ -145,7 +149,7 @@ export function Hud() {
         <span className="sep" />
         <button onClick={() => zoomBy(0.8)} aria-label="Zoom in" title="Zoom in">＋</button>
         <button onClick={() => zoomBy(1.25)} aria-label="Zoom out" title="Zoom out">－</button>
-      </nav>
+      </nav>}
 
       {app.engine === 'fallback' && <div id="banner-warn" className="glass">Engine could not load. Playing a simple bot instead.</div>}
 

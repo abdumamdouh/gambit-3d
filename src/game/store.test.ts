@@ -87,3 +87,13 @@ describe('modes and start positions', () => {
     expect(piecesAt(g().history, 0, g().startFen).find(p => p.type === 'r')?.square).toBe('a1')
   })
 })
+
+describe('loadPgn', () => {
+  it('loads moves and keeps them reviewable', () => {
+    g().loadPgn('1. e4 e5 2. Bc4 Nc6 3. Qh5 Nf6 4. Qxf7# 1-0')
+    expect(g().history).toHaveLength(7)
+    expect(g().result).toMatchObject({ over: true, reason: 'checkmate', winner: 'w' })
+    expect(g().pieces.filter(p => p.captured)).toHaveLength(1)
+  })
+  it('throws on garbage', () => expect(() => g().loadPgn('not a game 1. Zz9')).toThrow())
+})

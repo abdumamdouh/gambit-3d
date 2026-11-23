@@ -19,8 +19,11 @@ A cinematic 3D chess game that teaches you. Play Stockfish in a studio-lit 3D sc
 - Progress: Skill Report per game, accuracy chart, skills, rating estimate, weekly verdict, export/import
 - 4 board styles: Obsidian & Ivory, Walnut Classic, Crystal, Neon Night · zoom buttons
 
-## Next
-Academy → Tactics trainer → Online (Lichess + friend link) → Polish.
+## M3–M6 · Academy, Tactics, Online, Polish
+- 🎓 **Academy**: 5-question placement test, 6 stages (pieces, rules, mates, tactics, openings, graduation), practice K+Q / K+R mates vs Stockfish, XP
+- ⚔ **Tactics trainer**: live Lichess puzzles by theme near your rating, puzzle rating, missed puzzles return after 1/3/7 days, daily puzzle + streak
+- 🌐 **Online**: play a friend with an invite link (peer-to-peer, no account) or real players on Lichess (sign in with Lichess, casual rapid/classical) — on the 3D board
+- ✨ **Polish**: synthesized sounds, PGN export + review any PGN, graphics presets (High / Medium / Low / 2D board), labels face the player
 See [`GOAL.md`](GOAL.md) and the [design spec](docs/superpowers/specs/2026-11-23-gambit-3d-design.md).
 
 ## Run

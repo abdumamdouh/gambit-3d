@@ -32,6 +32,8 @@ export interface GameState {
   setViewPly(p: number | null): void
   newGame(o: NewGameOptions): void
   loadFen(fen: string, mode?: Mode, playerColor?: Color): void
+  /** Load a whole game (for review). Throws on invalid PGN. */
+  loadPgn(pgn: string): void
   legalMoves(square: string): Move[]
   select(square: string | null): void
   tryMove(from: string, to: string): boolean
@@ -85,6 +87,17 @@ export const useGame = create<GameState>((set, get) => ({
   loadFen(fen, mode = 'drill', playerColor) {
     chess = new Chess(fen)
     set({ ...snapshot(fenPieces(fen)), gameId: get().gameId + 1, mode, startFen: fen, playerColor: playerColor ?? chess.turn(), clock: { w: Infinity, b: Infinity }, minutes: null })
+  },
+
+  loadPgn(pgn) {
+    const c = new Chess()
+    c.loadPgn(pgn)
+    const sans = c.history()
+    const start = c.getHeaders().FEN ?? START
+    chess = new Chess(start)
+    let pieces = fenPieces(start)
+    for (const san of sans) pieces = applyMove(pieces, chess.move(san))
+    set({ ...snapshot(pieces), gameId: get().gameId + 1, mode: 'game', startFen: start, playerColor: 'w', clock: { w: Infinity, b: Infinity }, minutes: null })
   },
 
   legalMoves: square => (get().result.over ? [] : chess.moves({ square: square as never, verbose: true })),

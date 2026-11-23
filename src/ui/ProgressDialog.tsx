@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { allGames, importGames } from '../progress/db'
 import { ratingEstimate, verdict, type GameRecord, type Skills } from '../progress/skills'
 import { gameAccuracy } from '../coach/eval'
+import { useGame } from '../game/store'
+import { runReview } from '../coach/review-store'
+import { useApp } from './app-store'
 
 // Validated with dataviz/validate_palette.js on #14161d (dark): all checks pass.
 const NOW_C = '#b8852c'
@@ -79,6 +82,7 @@ export function ProgressDialog({ onClose }: { onClose(): void }) {
   const [games, setGames] = useState<GameRecord[] | null>(null)
   const [msg, setMsg] = useState('')
   const file = useRef<HTMLInputElement>(null)
+  const pgnFile = useRef<HTMLInputElement>(null)
   const load = () => allGames().then(g => setGames(g.sort((a, b) => a.date - b.date)))
   useEffect(() => { load() }, [])
 
@@ -133,6 +137,12 @@ export function ProgressDialog({ onClose }: { onClose(): void }) {
           <button className="ghost" onClick={exportJson} disabled={!all.length}>Export</button>
           <button className="ghost" onClick={() => file.current?.click()}>Import</button>
           <input ref={file} type="file" accept="application/json" hidden onChange={e => e.target.files?.[0] && importJson(e.target.files[0])} />
+          <button className="ghost" onClick={() => pgnFile.current?.click()} title="Review any game from a PGN file">Review a PGN</button>
+          <input ref={pgnFile} type="file" accept=".pgn,text/plain" hidden onChange={async e => {
+            const f = e.target.files?.[0]
+            if (!f) return
+            try { useGame.getState().loadPgn(await f.text()); useApp.getState().set({ dialog: false }); onClose(); void runReview() } catch { setMsg('That file is not a valid PGN.') }
+          }} />
         </div>
         {msg && <p className="small mute">{msg}</p>}
       </div>

@@ -4,11 +4,13 @@ import { useThree } from '@react-three/fiber'
 import { Sparkles } from '@react-three/drei'
 import { EffectComposer, Bloom, Vignette, ToneMapping } from '@react-three/postprocessing'
 import { ToneMappingMode } from 'postprocessing'
+import { useSettings, QUALITY } from '../polish/settings'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 
 /** Lights, environment, floor, dust and post effects. No network assets. */
 export function Studio() {
   const { gl, scene } = useThree()
+  const q = QUALITY[useSettings(s => s.quality) as 'high' | 'medium' | 'low'] ?? QUALITY.high
   useEffect(() => {
     const pm = new THREE.PMREMGenerator(gl)
     const env = pm.fromScene(new RoomEnvironment(), 0.04).texture
@@ -40,9 +42,9 @@ export function Studio() {
         <circleGeometry args={[40, 64]} />
         <meshStandardMaterial color="#0c0d11" roughness={0.85} />
       </mesh>
-      <Sparkles count={140} scale={[22, 9, 22]} position={[0, 4, 0]} size={2.2} speed={0.25} opacity={0.6} color="#f6d58e" />
-      <EffectComposer multisampling={4}>
-        <Bloom mipmapBlur luminanceThreshold={1} intensity={0.55} />
+      {q.dust && <Sparkles count={140} scale={[22, 9, 22]} position={[0, 4, 0]} size={2.2} speed={0.25} opacity={0.6} color="#f6d58e" />}
+      <EffectComposer multisampling={q.bloom ? 4 : 0}>
+        <Bloom mipmapBlur luminanceThreshold={1} intensity={q.bloom ? 0.55 : 0} />
         <Vignette offset={0.25} darkness={0.7} />
         <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
       </EffectComposer>
