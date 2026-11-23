@@ -1,7 +1,9 @@
 # Gambit 3D — LinkedIn demo (~65 s). Record against https://gambit-3d-chess.vercel.app/?demo=1
-# Each beat clicks one hidden #demo-N step button; waits cover the scripted action so beats never overlap.
+# Each beat clicks one hidden #demo-N step button. `hold` (s) floors the beat so the scripted action fits;
+# the trailing wait stays just under the hold so the next beat starts on time.
 beats:
 - say: I wanted to get better at chess. So I built my own coach — in 3D.
+  hold: 5.0
   zoom: true
   actions:
   - type: wait
@@ -9,54 +11,62 @@ beats:
   - type: click
     selector: '#demo-1'
   - type: wait
-    ms: 3200
+    ms: 3300
 - say: Play Stockfish at eight levels, right in the browser. Every rule, every move.
+  hold: 7.5
   actions:
   - type: click
     selector: '#demo-2'
   - type: wait
-    ms: 10500
+    ms: 7000
 - say: It stops my blunders before I make them.
+  hold: 4.5
   zoom: true
   actions:
   - type: click
     selector: '#demo-3'
   - type: wait
-    ms: 4200
+    ms: 4000
 - say: And when I'm stuck, it shows me the better move.
+  hold: 6.5
   actions:
   - type: click
     selector: '#demo-4'
   - type: wait
-    ms: 6200
+    ms: 6000
 - say: After every game, it reviews each move and explains my mistakes in plain words.
+  hold: 7.5
   actions:
   - type: click
     selector: '#demo-5'
   - type: wait
-    ms: 7500
+    ms: 7000
 - say: It learns my style across games, and turns my own mistakes into lessons.
+  hold: 6.0
   zoom: true
   actions:
   - type: click
     selector: '#demo-6'
   - type: wait
-    ms: 6000
+    ms: 5500
 - say: Lessons from zero, real puzzles from Lichess, and four board styles.
+  hold: 7.5
   actions:
   - type: click
     selector: '#demo-7'
   - type: wait
-    ms: 9500
+    ms: 7000
 - say: It's free, open source, and works offline — even on my phone.
+  hold: 4.0
   actions:
   - type: click
     selector: '#demo-8'
   - type: wait
-    ms: 4000
+    ms: 3500
 - say: Gambit 3D. Built in one day with Claude Code. Link in the comments.
+  hold: 5.0
   actions:
   - type: click
     selector: '#demo-9'
   - type: wait
-    ms: 4000
+    ms: 4500

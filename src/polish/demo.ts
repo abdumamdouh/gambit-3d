@@ -23,17 +23,17 @@ const g = () => useGame.getState()
 async function click(from: string, to: string) {
   const n = g().history.length
   onSquareClick(from)
-  await wait(550)
+  await wait(380)
   onSquareClick(to)
   // Wait for the move (the blunder guard checks it first), or for the guard to stop it.
   for (let i = 0; i < 60 && g().history.length === n && !useCoach.getState().guard; i++) await wait(100)
-  await wait(500)
+  await wait(250)
 }
 /** Opponent move (scripted, so every take of the video is identical). */
 async function reply(from: string, to: string) {
-  await wait(500)
+  await wait(300)
   g().move({ from, to })
-  await wait(700)
+  await wait(450)
 }
 
 const BLACKBURNE = '[Result "0-1"]\n\n1. e4 e5 2. Nf3 Nc6 3. Bc4 Nd4 4. Nxe5 Qg5 5. Nxf7 Qxg2 6. Rf1 Qxe4+ 7. Be2 Nf3# 0-1'
@@ -75,7 +75,7 @@ export const STEPS: Record<number, () => Promise<void>> = {
   1: once(async () => { useView.getState().setCam('orbit') }),
   // 2 Play: a clean Italian opening, pieces arcing across the board.
   2: once(async () => {
-    useView.getState().setCam('player'); await wait(1500)
+    useView.getState().setCam('player'); await wait(1100)
     await click('e2', 'e4'); await reply('e7', 'e5')
     await click('g1', 'f3'); await reply('b8', 'c6')
     await click('f1', 'c4'); await reply('g8', 'f6')
@@ -83,12 +83,12 @@ export const STEPS: Record<number, () => Promise<void>> = {
   // 3 Blunder guard: try Nxe5?? and get stopped.
   3: once(async () => {
     await click('f3', 'e5')
-    await wait(3200)
+    await wait(2800)
     useCoach.getState().set({ guard: null })
   }),
   // 4 Hint arrow, then castle.
   4: once(async () => {
-    await showHint(); await wait(2600)
+    await showHint(); await wait(2000)
     await click('e1', 'g1'); await reply('f8', 'c5')
   }),
   // 5 Review a lost game: labels, explanation, better-move arrow.
@@ -100,16 +100,16 @@ export const STEPS: Record<number, () => Promise<void>> = {
   // 6 My Coach: style analysis across games → train my own mistakes.
   6: once(async () => {
     closeReview()
-    useApp.getState().set({ panel: 'mycoach' }); await wait(4200)
+    useApp.getState().set({ panel: 'mycoach' }); await wait(3200)
     ;(document.querySelector('.mycoach .primary') as HTMLButtonElement | null)?.click()
   }),
   // 7 Montage: Academy, a live Lichess puzzle, four styles.
   7: once(async () => {
     exitTrain()
-    useApp.getState().set({ panel: 'academy' }); await wait(1800)
-    useApp.getState().set({ panel: null }); void nextPuzzle(); await wait(2300)
+    useApp.getState().set({ panel: 'academy' }); await wait(1400)
+    useApp.getState().set({ panel: null }); void nextPuzzle(); await wait(1800)
     exitTrain(); g().newGame({ color: 'w', level: 3, minutes: null }); useView.getState().setCam('low')
-    for (const t of ['walnut', 'crystal', 'neon', 'obsidian'] as const) { useTheme.getState().setTheme(t); await wait(1250) }
+    for (const t of ['walnut', 'crystal', 'neon', 'obsidian'] as const) { useTheme.getState().setTheme(t); await wait(850) }
   }),
   // 8 Close-up: slow cinematic orbit.
   8: once(async () => { useView.getState().setCam('orbit') }),
