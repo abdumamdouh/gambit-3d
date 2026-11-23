@@ -77,3 +77,92 @@ button:disabled{opacity:.4;cursor:default}
   #cams button{padding:8px 10px;font-size:12px}
   .levels{grid-template-columns:repeat(4,1fr)}
 }
+
+/* ---------- M2: brand buttons, eval bar, coach extras ---------- */
+#tools{position:fixed;top:72px;left:20px;display:flex;gap:6px}
+#tools button{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:var(--glass);border:1px solid var(--edge);border-radius:12px;padding:7px 12px;font-size:12px}
+#tools button:hover{border-color:var(--gold)}
+#brand button{background:rgba(255,255,255,.05);border:1px solid var(--edge);border-radius:10px;padding:4px 10px;font-size:12px}
+#brand button:hover{border-color:var(--gold)}
+#evalbar{position:fixed;left:22px;top:50%;transform:translateY(-50%);width:16px;height:46vh;border-radius:10px;overflow:hidden;background:#1a1c23;border:1px solid var(--edge)}
+#evalbar .fill{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(#fff8ea,#d8cfbf);transition:height .8s cubic-bezier(.2,.8,.2,1)}
+#evalbar.black{background:#e9e2d4}
+#evalbar.black .fill{background:linear-gradient(#2b2e38,#121318)}
+#evalbar span{position:absolute;left:50%;bottom:-24px;transform:translateX(-50%);font-size:11px;color:var(--mute);white-space:nowrap}
+#evalbar{overflow:visible}
+#evalbar .fill{border-radius:0 0 10px 10px}
+.actions button.hint{border-color:rgba(226,180,92,.5);color:var(--gold2)}
+.toggles{display:flex;gap:12px;margin-top:10px;font-size:12px;color:var(--mute);flex-wrap:wrap}
+.toggles label{display:flex;align-items:center;gap:6px;cursor:pointer}
+.toggles input{accent-color:var(--gold)}
+#cams .sep{width:1px;background:var(--edge);margin:4px 2px}
+.row2{display:flex;gap:8px;margin-top:16px}
+.row2 button{flex:1;margin-top:0}
+.ghost{border:1px solid var(--edge);background:rgba(255,255,255,.04);border-radius:12px;padding:12px}
+.ghost:hover:not(:disabled){border-color:var(--gold)}
+.x{float:right;background:transparent;border:0;color:var(--mute);font-size:16px}
+.modal h2 .x{font-size:18px}
+
+/* review */
+.progress{height:8px;border-radius:6px;background:rgba(255,255,255,.06);overflow:hidden;margin-top:12px}
+.progress div{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width .3s}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin:10px 0}
+.chip{font-size:11px;padding:2px 8px;border-radius:99px;border:1px solid var(--edge);background:rgba(255,255,255,.04)}
+.l-best{color:#7ee08a}.l-good{color:#c6d0dd}.l-inacc{color:#f2c94c}.l-mistake{color:#f2994a}.l-blunder{color:#ff6b6b}
+.explain{background:rgba(255,255,255,.04);border:1px solid var(--edge);border-radius:12px;padding:10px 12px;margin-bottom:10px}
+.explain .head{display:flex;gap:8px;align-items:center;margin-bottom:4px}
+.explain p{margin:4px 0;color:#d9d5cc}
+.explain b{color:var(--gold2)}
+.badge{font-size:10px;padding:1px 6px;border-radius:6px;background:rgba(79,209,197,.15);color:var(--teal);margin-right:4px}
+#moves.labeled{display:flex;flex-wrap:wrap;gap:4px;max-height:140px}
+#moves .mv{background:transparent;border:1px solid transparent;border-radius:8px;padding:2px 6px;font-size:12px;color:var(--text)}
+#moves .mv i{font-style:normal;margin-left:2px;font-weight:700}
+#moves .mv.on{border-color:var(--gold);background:rgba(226,180,92,.12)}
+#moves .mv .n{color:#5d6270;margin-right:3px}
+.saved{color:#7ee08a;margin:8px 0 0}
+
+/* progress dialog */
+.progress-dlg{width:min(560px,100%);text-align:left;max-height:calc(100vh - 32px);overflow:auto}
+.progress-dlg h4{margin:18px 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--mute);font-weight:500}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.chart{position:relative;background:#14161d;border-radius:12px;padding:8px}
+.chart svg{width:100%;height:auto;display:block}
+.chart .grid{stroke:rgba(255,255,255,.07);stroke-width:1}
+.chart .axis{fill:#6b7280;font-size:10px}
+.chart .cross{stroke:rgba(255,255,255,.25);stroke-dasharray:3 3}
+.chart .tip{position:absolute;top:6px;transform:translateX(-50%);background:#0c0d12;border:1px solid var(--edge);border-radius:8px;padding:6px 8px;font-size:12px;pointer-events:none;white-space:nowrap}
+.skills .legend{display:flex;gap:14px;font-size:12px;color:var(--mute);margin-bottom:8px}
+.skills .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.skill{display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:center;margin:6px 0;font-size:12px}
+.skill .name{color:#d9d5cc}
+.skill .bars{display:flex;flex-direction:column;gap:2px}
+.skill .bar{position:relative;height:10px;background:rgba(255,255,255,.04);border-radius:4px}
+.skill .bar div{height:100%;border-radius:0 4px 4px 0}
+.skill .bar em{position:absolute;right:-28px;top:-3px;font-style:normal;font-size:11px;color:var(--mute);width:24px}
+.skill .bars{margin-right:30px}
+table.games{width:100%;border-collapse:collapse;font-size:12px}
+table.games th,table.games td{padding:6px;border-bottom:1px solid var(--edge);text-align:left}
+table.games th{color:var(--mute);font-weight:500}
+table.games .win{color:#7ee08a}table.games .loss{color:#ff6b6b}
+
+/* theme picker */
+.themes{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px}
+.themes button{display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:left;background:rgba(255,255,255,.04);border:1px solid var(--edge);border-radius:14px;padding:12px}
+.themes button.on{border-color:var(--gold);background:rgba(226,180,92,.12)}
+.themes .sw{display:flex;gap:4px;margin-bottom:4px}
+.themes .sw i{width:22px;height:22px;border-radius:6px;border:1px solid rgba(255,255,255,.15)}
+.themes small{color:var(--mute);font-size:11px}
+
+@media (max-width:760px){
+  #tools{top:12px;left:auto;right:12px}
+  #tools button span{display:none}
+  #evalbar{left:8px;height:30vh;width:10px}
+  .toggles{display:none}
+  .tiles{grid-template-columns:repeat(2,1fr)}
+  .review #stats,.review .chips{display:none}
+  .review .explain{margin-bottom:6px;font-size:12px}
+  #moves.labeled{display:none}
+  .themes{grid-template-columns:1fr}
+  #cams{gap:2px}
+  #cams button{padding:8px 8px}
+}

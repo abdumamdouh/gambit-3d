@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { buildRecord, verdict, ratingEstimate, type GameRecord } from './skills'
 import type { PlyReview } from '../coach/review'
 
-const ply = (o: Partial<PlyReview>): PlyReview & { phase: 'opening' | 'middlegame' | 'endgame' } => ({
+const ply = (o: Partial<PlyReview & { phase: 'opening' | 'middlegame' | 'endgame' }>): PlyReview & { phase: 'opening' | 'middlegame' | 'endgame' } => ({
   ply: 1, san: 'e4', color: 'w', from: 'e2', to: 'e4', before: { cp: 0 }, after: { cp: 0 }, best: null, bestSan: null, pvSan: [],
   loss: 0, label: 'good', accuracy: 90, tags: [], phase: 'opening', ...o,
 })

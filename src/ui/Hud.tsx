@@ -4,6 +4,12 @@ import type { Color, PieceType } from '../game/pieces'
 import { LEVELS } from '../engine/levels'
 import { useView, type CamPreset } from '../scene/view'
 import { useApp } from './app-store'
+import { useCoach } from '../coach/coach-store'
+import { showHint } from '../coach/actions'
+import { useReview, runReview } from '../coach/review-store'
+import { EvalBar, GuardModal, ReviewPanel, Toggles } from './CoachUi'
+import { ProgressDialog } from './ProgressDialog'
+import { ThemePicker } from './ThemePicker'
 
 const NAMES: Record<PieceType, string> = { p: 'Pawn', n: 'Knight', b: 'Bishop', r: 'Rook', q: 'Queen', k: 'King' }
 const TIPS: Record<PieceType, string> = {
@@ -29,6 +35,8 @@ const fmt = (ms: number) => {
 function useCoachText(): string {
   const { selected, pieces, history, result, playerColor } = useGame()
   const thinking = useApp(s => s.thinking)
+  const hint = useCoach(s => s.hint)
+  const checking = useCoach(s => s.checking)
   const legalMoves = useGame(s => s.legalMoves)
   if (result.over) return ''
   if (selected) {
@@ -38,6 +46,8 @@ function useCoachText(): string {
       return `<b>${NAMES[p.type]}</b> ${TIPS[p.type]} It has <b>${n}</b> legal move${n === 1 ? '' : 's'} now.`
     }
   }
+  if (checking) return 'Coach is checking…'
+  if (hint) return `💡 Hint: try <b>${hint.san}</b>. Follow the teal arrow, then ask why it works.`
   if (thinking) return 'Stockfish is thinking…'
   const last = history[history.length - 1]
   if (!last) return `You play <b>${playerColor === 'w' ? 'White' : 'Black'}</b>. Click a piece to see how it moves.`
@@ -55,6 +65,9 @@ export function Hud() {
   const app = useApp()
   const cam = useView(s => s.cam)
   const setCam = useView(s => s.setCam)
+  const zoomBy = useView(s => s.zoomBy)
+  const reviewOpen = useReview(s => s.open)
+  const [panel, setPanel] = useState<null | 'progress' | 'style'>(null)
   const coach = useCoachText()
   const movesRef = useRef<HTMLDivElement>(null)
   const opp: Color = g.playerColor === 'w' ? 'b' : 'w'
@@ -69,6 +82,11 @@ export function Hud() {
   return (
     <>
       <div id="brand" className="glass"><b>GAMBIT <span>3D</span></b><small>learn · play · improve</small></div>
+      <div id="tools">
+        <button onClick={() => setPanel('progress')} title="Your progress">📈<span> Progress</span></button>
+        <button onClick={() => setPanel('style')} title="Board style">🎨<span> Style</span></button>
+      </div>
+      <EvalBar />
 
       <div id="opp" className="glass">
         <span className={`dot ${app.engine}`} title={`Engine: ${app.engine}`} />
@@ -81,7 +99,7 @@ export function Hud() {
         <span className={`clock ${g.turn() === g.playerColor && !g.result.over ? 'on' : ''}`}>{fmt(g.clock[g.playerColor])}</span>
       </div>
 
-      <aside id="coach" className="glass">
+      {reviewOpen ? <ReviewPanel /> : <aside id="coach" className="glass">
         <h3><i>♛</i>Coach</h3>
         <div id="msg" dangerouslySetInnerHTML={{ __html: coach || '&nbsp;' }} />
         <div id="moves" ref={movesRef}>
@@ -98,7 +116,12 @@ export function Hud() {
           <button onClick={() => g.undo()} disabled={!g.history.length || app.thinking}>↶ Undo</button>
           <button onClick={() => g.resign()} disabled={g.result.over || !g.history.length}>Resign</button>
         </div>
-      </aside>
+        <div className="actions">
+          <button className="hint" onClick={() => showHint()} disabled={g.result.over || app.thinking || g.turn() !== g.playerColor}>💡 Hint</button>
+          <button onClick={() => runReview()} disabled={!g.result.over}>🔍 Review</button>
+        </div>
+        <Toggles />
+      </aside>}
 
       <nav id="cams" className="glass">
         {(['player', 'top', 'low', 'orbit'] as CamPreset[]).map(c => (
@@ -106,13 +129,19 @@ export function Hud() {
             {{ player: 'Player', top: 'Top', low: 'Low angle', orbit: 'Cinematic' }[c]}
           </button>
         ))}
+        <span className="sep" />
+        <button onClick={() => zoomBy(0.8)} aria-label="Zoom in" title="Zoom in">＋</button>
+        <button onClick={() => zoomBy(1.25)} aria-label="Zoom out" title="Zoom out">－</button>
       </nav>
 
       {app.engine === 'fallback' && <div id="banner-warn" className="glass">Engine could not load. Playing a simple bot instead.</div>}
 
       {g.pendingPromotion && <PromotionPicker color={g.playerColor} />}
-      {g.result.over && !app.dialog && <ResultCard />}
+      {g.result.over && !app.dialog && !reviewOpen && <ResultCard />}
       {app.dialog && <NewGameDialog />}
+      <GuardModal />
+      {panel === 'progress' && <ProgressDialog onClose={() => setPanel(null)} />}
+      {panel === 'style' && <ThemePicker onClose={() => setPanel(null)} />}
     </>
   )
 }
@@ -145,7 +174,10 @@ function ResultCard() {
       <div className="modal glass">
         <h2>{title}</h2>
         <p className="mute">{why}</p>
-        <button className="primary" onClick={() => set({ dialog: true })}>New game</button>
+        <div className="row2">
+          <button className="primary" onClick={() => runReview()}>🔍 Review game</button>
+          <button className="ghost" onClick={() => set({ dialog: true })}>New game</button>
+        </div>
       </div>
     </div>
   )

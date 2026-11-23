@@ -8,3 +8,6 @@ createRoot(document.getElementById('root')!).render(
     <App />
   </StrictMode>,
 )
+
+// Dev-only handle for browser e2e checks (stripped from production builds).
+if (import.meta.env.DEV) Promise.all([import('./game/store'), import('./scene/input')]).then(([g, i]) => Object.assign(window, { __game: g.useGame, __click: i.onSquareClick }))

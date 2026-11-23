@@ -7,14 +7,14 @@ Spec: `docs/superpowers/specs/2026-11-23-gambit-3d-design.md` · Loops: `docs/lo
 | # | Item | Status | Branch | Notes |
 | - | ---- | ------ | ------ | ----- |
 | 1 | M1 Play — 3D board, full rules, engine levels, cameras | done | main | live 2026-11-23: https://gambit-3d-chess.vercel.app |
-| 2 | M2a Coach — eval bar, hint, blunder guard | not started | | |
-| 3 | M2b Game review — labels, 3D arrows, explanations (templates + Qwen) | not started | | |
-| 4 | M2c Progress — Skill Report, IndexedDB, dashboard, weekly verdict | not started | | |
+| 2 | M2a Coach — eval bar, hint, blunder guard | done | main | 2026-11-23, + zoom buttons |
+| 3 | M2b Game review — labels, 3D arrows, explanations (templates + Qwen) | done | main | 2026-11-23 |
+| 4 | M2c Progress — Skill Report, IndexedDB, dashboard, weekly verdict | done | main | 2026-11-23 |
 | 5 | M3 Academy — placement test + 6 stages | not started | | |
 | 6 | M4 Tactics — puzzles, rating, spaced repetition | not started | | |
 | 7 | M5a Online — Lichess OAuth + Board API | not started | | |
 | 8 | M5b Online — P2P friend link | not started | | |
-| 9 | M6 Polish — themes, sounds, PGN, mobile, presets | not started | | |
+| 9 | M6 Polish — themes, sounds, PGN, mobile, presets | in progress | main | 4 themes shipped early (owner request) |
 
 ### 2 — M2a Coach
 - Eval bar driven by engine `analyse()` (depth 12) after every move; white-bottom, smooth animation.

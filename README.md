@@ -12,8 +12,15 @@ A cinematic 3D chess game that teaches you. Play Stockfish in a studio-lit 3D sc
 - Clocks, undo, resign, piece tips from the coach
 - Works on phones
 
+## M2 · Coach + Progress
+- Eval bar, 💡 hint arrow, blunder guard ("Are you sure?")
+- Automatic game review: best / good / inaccuracy / mistake / blunder, better-move arrows, plain-words explanations
+- Optional **local AI coach**: Qwen in LM Studio (`lms server start --cors`), free and private; answers that name moves outside the engine line are dropped
+- Progress: Skill Report per game, accuracy chart, skills, rating estimate, weekly verdict, export/import
+- 4 board styles: Obsidian & Ivory, Walnut Classic, Crystal, Neon Night · zoom buttons
+
 ## Next
-Coach + progress score → Academy → Tactics trainer → Online (Lichess + friend link) → Polish.
+Academy → Tactics trainer → Online (Lichess + friend link) → Polish.
 See [`GOAL.md`](GOAL.md) and the [design spec](docs/superpowers/specs/2026-11-23-gambit-3d-design.md).
 
 ## Run

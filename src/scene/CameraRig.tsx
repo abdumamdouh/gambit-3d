@@ -22,6 +22,7 @@ export function CameraRig() {
   const nonce = useView(s => s.nonce)
   const color = useGame(s => s.playerColor)
   const gameId = useGame(s => s.gameId)
+  const zoomNonce = useView(s => s.zoomNonce)
   const tw = useRef({ t: 1, dur: 1.4, p0: new THREE.Vector3(), p1: new THREE.Vector3(), t0: new THREE.Vector3(), t1: new THREE.Vector3() })
   const first = useRef(true)
 
@@ -49,6 +50,16 @@ export function CameraRig() {
     first.current = false
     c.autoRotate = cam === 'orbit'
   }, [cam, nonce, color, gameId, camera, pull])
+
+  // Zoom buttons: dolly toward/away from the target, inside the orbit limits.
+  useEffect(() => {
+    const c = controls.current
+    if (!c || !zoomNonce) return
+    const f = useView.getState().zoom
+    const off = camera.position.clone().sub(c.target)
+    const d = THREE.MathUtils.clamp(off.length() * f, c.minDistance, c.maxDistance)
+    Object.assign(tw.current, { t: 0, dur: 0.35, p0: camera.position.clone(), t0: c.target.clone(), p1: c.target.clone().add(off.setLength(d)), t1: c.target.clone() })
+  }, [zoomNonce, camera])
 
   useFrame((_, dt) => {
     const a = tw.current, c = controls.current

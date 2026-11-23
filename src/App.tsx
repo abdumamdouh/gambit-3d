@@ -3,11 +3,13 @@ import { Scene } from './scene/Scene'
 import { Hud } from './ui/Hud'
 import { useGame } from './game/store'
 import { useApp } from './ui/app-store'
-import { Engine } from './engine/engine'
 import { LEVELS } from './engine/levels'
 
-const engine = new Engine()
-engine.ready.then(ok => useApp.getState().set({ engine: ok ? 'ready' : 'fallback' }))
+import { engine } from './engine/instance'
+import { refreshEval } from './coach/actions'
+import { useCoach } from './coach/coach-store'
+import { useReview, runReview } from './coach/review-store'
+import './scene/themes'
 
 /** Engine plays whenever it is not the player's turn. Stale replies are dropped. */
 function useEngineTurn() {
@@ -35,6 +37,17 @@ function useEngineTurn() {
   }, [fen, gameId, over, dialog])
 }
 
+/** Eval bar after every move; clear the hint; review the game when it ends. */
+function useCoachLoop() {
+  const fen = useGame(s => s.fen)
+  const gameId = useGame(s => s.gameId)
+  const over = useGame(s => s.result.over)
+  useEffect(() => { useCoach.getState().set({ hint: null, guard: null }) }, [fen])
+  useEffect(() => { useCoach.getState().set({ score: null, hintsUsed: 0 }); useReview.getState().set({ open: false, status: 'idle', gameId: -1 }) }, [gameId])
+  useEffect(() => { if (!useApp.getState().dialog) void refreshEval(fen) }, [fen])
+  useEffect(() => { if (over && useGame.getState().history.length >= 6) void runReview() }, [over])
+}
+
 function useClock() {
   useEffect(() => {
     let last = performance.now()
@@ -49,6 +62,7 @@ function useClock() {
 
 export default function App() {
   useEngineTurn()
+  useCoachLoop()
   useClock()
   return (
     <>

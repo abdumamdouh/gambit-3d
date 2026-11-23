@@ -3,6 +3,9 @@ import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import { useGame } from '../game/store'
 import { glow, sqPos } from './geometry'
+import { Arrow } from './Arrow'
+import { useCoach } from '../coach/coach-store'
+import { useReview } from '../coach/review-store'
 
 const dotGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.02, 32)
 const ringGeo = new THREE.RingGeometry(0.38, 0.46, 64)
@@ -19,7 +22,12 @@ const FLAT = [-Math.PI / 2, 0, 0] as const
 export function Markers() {
   const selected = useGame(s => s.selected)
   const fen = useGame(s => s.fen)
-  const lastMove = useGame(s => s.lastMove)
+  const liveLast = useGame(s => s.lastMove)
+  const viewPly = useGame(s => s.viewPly)
+  const history = useGame(s => s.history)
+  const hint = useCoach(s => s.hint)
+  const review = useReview(s => (s.open && s.status === 'done' && viewPly ? s.plies[viewPly - 1] : null))
+  const lastMove = viewPly === null ? liveLast : viewPly > 0 ? { from: history[viewPly - 1].from, to: history[viewPly - 1].to } : null
   const pieces = useGame(s => s.pieces)
   const legalMoves = useGame(s => s.legalMoves)
   const pulse = useRef<THREE.Group>(null)
@@ -42,7 +50,9 @@ export function Markers() {
       {lastMove && [lastMove.from, lastMove.to].map(sq => (
         <mesh key={'l' + sq} geometry={tileGeo} material={MAT.last} rotation={FLAT} position={sqPos(sq).setY(0.002)} />
       ))}
-      {checkSq && <mesh geometry={tileGeo} material={MAT.check} rotation={FLAT} position={sqPos(checkSq).setY(0.003)} />}
+      {viewPly === null && hint && <Arrow from={hint.from} to={hint.to} />}
+      {review?.best && review.label !== 'best' && <Arrow from={review.best.from} to={review.best.to} />}
+      {viewPly === null && checkSq && <mesh geometry={tileGeo} material={MAT.check} rotation={FLAT} position={sqPos(checkSq).setY(0.003)} />}
       {selected && <mesh geometry={ringGeo} material={MAT.sel} rotation={FLAT} position={sqPos(selected).setY(0.004)} />}
       <group ref={pulse}>
         {moves.map(m => {
