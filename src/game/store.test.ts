@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { useGame } from './store'
+import { useGame, piecesAt } from './store'
 
 const g = () => useGame.getState()
 
@@ -59,5 +59,31 @@ describe('store', () => {
   it('blocks moves after game over', () => {
     g().resign()
     expect(g().tryMove('e2', 'e4')).toBe(false)
+  })
+})
+
+describe('modes and start positions', () => {
+  it('newGame is a normal game', () => {
+    g().newGame({ color: 'w', level: 3, minutes: null })
+    expect(g().mode).toBe('game')
+  })
+  it('loadFen sets drill mode, player = side to move, and a start fen', () => {
+    g().loadFen('4k3/8/8/8/8/8/8/R3K3 b - - 0 1')
+    expect(g().mode).toBe('drill')
+    expect(g().playerColor).toBe('b')
+    expect(g().startFen).toBe('4k3/8/8/8/8/8/8/R3K3 b - - 0 1')
+  })
+  it('undo from a loaded position goes back to that position', () => {
+    g().loadFen('4k3/8/8/8/8/8/8/R3K3 w - - 0 1', 'practice')
+    g().move({ from: 'a1', to: 'a7' })
+    g().move({ from: 'e8', to: 'd8' })
+    g().undo()
+    expect(g().fen).toBe('4k3/8/8/8/8/8/8/R3K3 w - - 0 1')
+    expect(g().pieces.find(p => p.square === 'a1')?.type).toBe('r')
+  })
+  it('piecesAt replays from the start fen', () => {
+    g().loadFen('4k3/8/8/8/8/8/8/R3K3 w - - 0 1')
+    g().move({ from: 'a1', to: 'a7' })
+    expect(piecesAt(g().history, 0, g().startFen).find(p => p.type === 'r')?.square).toBe('a1')
   })
 })

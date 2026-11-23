@@ -1,10 +1,12 @@
 import { create } from 'zustand'
 
 export type EngineStatus = 'loading' | 'ready' | 'fallback'
+export type Panel = null | 'progress' | 'style' | 'academy' | 'tactics' | 'online'
 
 export const useApp = create<{
   engine: EngineStatus
   thinking: boolean
   dialog: boolean
-  set(p: Partial<{ engine: EngineStatus; thinking: boolean; dialog: boolean }>): void
-}>(set => ({ engine: 'loading', thinking: false, dialog: true, set }))
+  panel: Panel
+  set(p: Partial<{ engine: EngineStatus; thinking: boolean; dialog: boolean; panel: Panel }>): void
+}>(set => ({ engine: 'loading', thinking: false, dialog: true, panel: null, set }))

@@ -72,7 +72,8 @@ export function Pieces() {
   const live = useGame(s => s.pieces)
   const history = useGame(s => s.history)
   const viewPly = useGame(s => s.viewPly)
-  const pieces = useMemo(() => (viewPly === null ? live : piecesAt(history, viewPly)), [live, history, viewPly])
+  const startFen = useGame(s => s.startFen)
+  const pieces = useMemo(() => (viewPly === null ? live : piecesAt(history, viewPly, startFen)), [live, history, viewPly, startFen])
   const selected = useGame(s => s.selected)
   const gameId = useGame(s => s.gameId)
   return (

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useGame } from '../game/store'
+import { playerMove } from '../train/route'
 import type { Color, PieceType } from '../game/pieces'
 import { LEVELS } from '../engine/levels'
 import { useView, type CamPreset } from '../scene/view'
@@ -10,6 +11,8 @@ import { useReview, runReview } from '../coach/review-store'
 import { EvalBar, GuardModal, ReviewPanel, Toggles } from './CoachUi'
 import { ProgressDialog } from './ProgressDialog'
 import { ThemePicker } from './ThemePicker'
+import { AcademyDialog, TacticsDialog, TrainPanel } from './TrainUi'
+import { useTrain, exitTrain } from '../train/session'
 
 const NAMES: Record<PieceType, string> = { p: 'Pawn', n: 'Knight', b: 'Bishop', r: 'Rook', q: 'Queen', k: 'King' }
 const TIPS: Record<PieceType, string> = {
@@ -67,7 +70,9 @@ export function Hud() {
   const setCam = useView(s => s.setCam)
   const zoomBy = useView(s => s.zoomBy)
   const reviewOpen = useReview(s => s.open)
-  const [panel, setPanel] = useState<null | 'progress' | 'style'>(null)
+  const panel = useApp(s => s.panel)
+  const setPanel = (p: typeof panel) => useApp.getState().set({ panel: p })
+  const training = useTrain(s => s.kind !== null)
   const coach = useCoachText()
   const movesRef = useRef<HTMLDivElement>(null)
   const opp: Color = g.playerColor === 'w' ? 'b' : 'w'
@@ -83,6 +88,8 @@ export function Hud() {
     <>
       <div id="brand" className="glass"><b>GAMBIT <span>3D</span></b><small>learn · play · improve</small></div>
       <div id="tools">
+        <button onClick={() => setPanel('academy')} title="Academy">🎓<span> Academy</span></button>
+        <button onClick={() => setPanel('tactics')} title="Tactics trainer">⚔<span> Tactics</span></button>
         <button onClick={() => setPanel('progress')} title="Your progress">📈<span> Progress</span></button>
         <button onClick={() => setPanel('style')} title="Board style">🎨<span> Style</span></button>
       </div>
@@ -90,7 +97,7 @@ export function Hud() {
 
       <div id="opp" className="glass">
         <span className={`dot ${app.engine}`} title={`Engine: ${app.engine}`} />
-        <span>Stockfish · {level.label}</span>
+        <span>{g.mode === 'drill' ? 'Training' : g.mode === 'online' ? 'Online' : `Stockfish · ${level.label}`}</span>
         <span className={`clock ${g.turn() === opp && !g.result.over ? 'on' : ''}`}>{fmt(g.clock[opp])}</span>
       </div>
 
@@ -99,7 +106,7 @@ export function Hud() {
         <span className={`clock ${g.turn() === g.playerColor && !g.result.over ? 'on' : ''}`}>{fmt(g.clock[g.playerColor])}</span>
       </div>
 
-      {reviewOpen ? <ReviewPanel /> : <aside id="coach" className="glass">
+      {training ? <TrainPanel /> : reviewOpen ? <ReviewPanel /> : <aside id="coach" className="glass">
         <h3><i>♛</i>Coach</h3>
         <div id="msg" dangerouslySetInnerHTML={{ __html: coach || '&nbsp;' }} />
         <div id="moves" ref={movesRef}>
@@ -137,11 +144,13 @@ export function Hud() {
       {app.engine === 'fallback' && <div id="banner-warn" className="glass">Engine could not load. Playing a simple bot instead.</div>}
 
       {g.pendingPromotion && <PromotionPicker color={g.playerColor} />}
-      {g.result.over && !app.dialog && !reviewOpen && <ResultCard />}
+      {g.result.over && !app.dialog && !reviewOpen && !training && <ResultCard />}
       {app.dialog && <NewGameDialog />}
       <GuardModal />
       {panel === 'progress' && <ProgressDialog onClose={() => setPanel(null)} />}
       {panel === 'style' && <ThemePicker onClose={() => setPanel(null)} />}
+      {panel === 'academy' && <AcademyDialog onClose={() => setPanel(null)} />}
+      {panel === 'tactics' && <TacticsDialog onClose={() => setPanel(null)} />}
     </>
   )
 }
@@ -155,7 +164,7 @@ function PromotionPicker({ color }: { color: Color }) {
         <h2>Promote your pawn</h2>
         <div className="promo">
           {(['q', 'r', 'b', 'n'] as const).map(p => (
-            <button key={p} onClick={() => g.move({ ...g.pendingPromotion!, promotion: p })} title={NAMES[p]}>{icons[p]}</button>
+            <button key={p} onClick={() => { const pp = g.pendingPromotion!; useGame.setState({ pendingPromotion: null }); playerMove(pp.from, pp.to, p) }} title={NAMES[p]}>{icons[p]}</button>
           ))}
         </div>
       </div>
@@ -191,6 +200,7 @@ function NewGameDialog() {
   const [minutes, setMinutes] = useState<number | null>(g.minutes)
   const start = () => {
     const c: Color = color === 'r' ? (Math.random() < 0.5 ? 'w' : 'b') : color
+    exitTrain()
     g.newGame({ color: c, level, minutes })
     set({ dialog: false })
     useView.getState().setCam('player')

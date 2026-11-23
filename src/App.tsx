@@ -10,6 +10,7 @@ import { refreshEval } from './coach/actions'
 import { useCoach } from './coach/coach-store'
 import { useReview, runReview } from './coach/review-store'
 import './scene/themes'
+import { useTrain, checkTrainResult } from './train/session'
 
 /** Engine plays whenever it is not the player's turn. Stale replies are dropped. */
 function useEngineTurn() {
@@ -22,7 +23,7 @@ function useEngineTurn() {
 
   useEffect(() => {
     const s = useGame.getState()
-    if (over || dialog || s.turn() === s.playerColor) return
+    if (over || dialog || s.turn() === s.playerColor || (s.mode !== 'game' && s.mode !== 'practice')) return
     let live = true
     useApp.getState().set({ thinking: true })
     const started = performance.now()
@@ -45,7 +46,8 @@ function useCoachLoop() {
   useEffect(() => { useCoach.getState().set({ hint: null, guard: null }) }, [fen])
   useEffect(() => { useCoach.getState().set({ score: null, hintsUsed: 0 }); useReview.getState().set({ open: false, status: 'idle', gameId: -1 }) }, [gameId])
   useEffect(() => { if (!useApp.getState().dialog) void refreshEval(fen) }, [fen])
-  useEffect(() => { if (over && useGame.getState().history.length >= 6) void runReview() }, [over])
+  useEffect(() => { const s = useGame.getState(); if (over && s.mode === 'game' && !useTrain.getState().kind && s.history.length >= 6) void runReview() }, [over])
+  useEffect(() => { checkTrainResult() }, [fen, over])
 }
 
 function useClock() {
@@ -53,7 +55,7 @@ function useClock() {
     let last = performance.now()
     const id = setInterval(() => {
       const now = performance.now()
-      if (!useApp.getState().dialog) useGame.getState().tick(now - last)
+      if (!useApp.getState().dialog && useGame.getState().mode === 'game') useGame.getState().tick(now - last)
       last = now
     }, 100)
     return () => clearInterval(id)

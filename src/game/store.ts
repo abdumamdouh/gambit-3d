@@ -4,7 +4,10 @@ import { applyMove, initialPieces, type Color, type Piece } from './pieces'
 import { gameResult, type Result } from './result'
 
 // ponytail: one module-level Chess instance; the store exposes snapshots only.
+const START = new Chess().fen()
 let chess = new Chess()
+
+export type Mode = 'game' | 'drill' | 'practice' | 'online'
 
 export interface NewGameOptions { color: Color; level: number; minutes: number | null }
 
@@ -21,11 +24,14 @@ export interface GameState {
   lastMove: { from: string; to: string } | null
   pendingPromotion: { from: string; to: string } | null
   gameId: number
+  /** game = vs engine; drill = scripted lesson/puzzle; practice = goal vs engine; online = remote opponent. */
+  mode: Mode
+  startFen: string
   /** Review mode: show the position after this many plies (null = live). */
   viewPly: number | null
   setViewPly(p: number | null): void
   newGame(o: NewGameOptions): void
-  loadFen(fen: string): void
+  loadFen(fen: string, mode?: Mode, playerColor?: Color): void
   legalMoves(square: string): Move[]
   select(square: string | null): void
   tryMove(from: string, to: string): boolean
@@ -64,20 +70,21 @@ export const useGame = create<GameState>((set, get) => ({
   lastMove: null,
   pendingPromotion: null,
   gameId: 0,
+  mode: 'game',
+  startFen: START,
   viewPly: null,
   setViewPly: p => set({ viewPly: p, selected: null }),
 
   newGame({ color, level, minutes }) {
     chess = new Chess()
     const ms = minutes ? minutes * 60000 : Infinity
-    set({ ...snapshot(initialPieces()), playerColor: color, level, minutes, clock: { w: ms, b: ms }, gameId: get().gameId + 1 })
+    set({ ...snapshot(initialPieces()), playerColor: color, level, minutes, clock: { w: ms, b: ms }, gameId: get().gameId + 1, mode: 'game', startFen: START })
   },
 
-  // For tests and future lessons/puzzles. Pieces get fresh ids.
-  loadFen(fen) {
+  // Lessons, puzzles, practice and online games start here. Pieces get fresh ids.
+  loadFen(fen, mode = 'drill', playerColor) {
     chess = new Chess(fen)
-    const pieces: Piece[] = chess.board().flat().filter(Boolean).map((c, i) => ({ id: `f${i}`, type: c!.type, color: c!.color, square: c!.square, captured: false }))
-    set({ ...snapshot(pieces), gameId: get().gameId + 1 })
+    set({ ...snapshot(fenPieces(fen)), gameId: get().gameId + 1, mode, startFen: fen, playerColor: playerColor ?? chess.turn(), clock: { w: Infinity, b: Infinity }, minutes: null })
   },
 
   legalMoves: square => (get().result.over ? [] : chess.moves({ square: square as never, verbose: true })),
@@ -107,8 +114,9 @@ export const useGame = create<GameState>((set, get) => ({
     if (n > 0 && history[n].color !== playerColor) n -= 1
     if (history[n]?.color !== playerColor) n += 1
     const keep = history.slice(0, Math.max(0, n))
-    chess = new Chess()
-    let pieces = initialPieces()
+    const start = get().startFen
+    chess = new Chess(start)
+    let pieces = fenPieces(start)
     for (const h of keep) pieces = applyMove(pieces, chess.move(h.san))
     set(snapshot(pieces))
   },
@@ -132,9 +140,15 @@ export const useGame = create<GameState>((set, get) => ({
 }))
 
 /** Pieces after the first `ply` moves, replayed from the start so ids match the live game. */
-export function piecesAt(history: Move[], ply: number): Piece[] {
-  const c = new Chess()
-  let p = initialPieces()
+export function piecesAt(history: Move[], ply: number, startFen = START): Piece[] {
+  const c = new Chess(startFen)
+  let p = fenPieces(startFen)
   for (const h of history.slice(0, ply)) p = applyMove(p, c.move(h.san))
   return p
+}
+
+/** Pieces for any position. The standard start keeps the standard ids. */
+export function fenPieces(fen: string): Piece[] {
+  if (fen === START) return initialPieces()
+  return new Chess(fen).board().flat().filter(Boolean).map((c, i) => ({ id: `f${i}`, type: c!.type, color: c!.color, square: c!.square, captured: false }))
 }

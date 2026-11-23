@@ -10,4 +10,4 @@ createRoot(document.getElementById('root')!).render(
 )
 
 // Dev-only handle for browser e2e checks (stripped from production builds).
-if (import.meta.env.DEV) Promise.all([import('./game/store'), import('./scene/input')]).then(([g, i]) => Object.assign(window, { __game: g.useGame, __click: i.onSquareClick }))
+if (import.meta.env.DEV) Promise.all([import('./game/store'), import('./scene/input'), import('./train/session')]).then(([g, i, t]) => Object.assign(window, { __game: g.useGame, __click: i.onSquareClick, __train: t.useTrain }))
