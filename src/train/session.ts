@@ -4,6 +4,7 @@ import { useCoach } from '../coach/coach-store'
 import { judge, firstPlayerStep, uciToMove, type Drill } from './drill'
 import { PLACEMENT, allLessons } from './academy'
 import { useAcademy } from './progress'
+import { leaveOnline } from '../online/session'
 
 export type TrainKind = 'lesson' | 'placement' | 'puzzle' | 'personal'
 export type TrainStatus = 'playing' | 'wrong' | 'solved' | 'failed'
@@ -29,6 +30,7 @@ export const useTrain = create<TrainState>(set => ({
 const wait = (ms: number) => new Promise(r => setTimeout(r, ms))
 
 export function startDrill(drill: Drill, kind: TrainKind, onEnd: TrainState['onEnd'] = null) {
+  leaveOnline() // review #5: a lesson must not share the board with an online game
   const g = useGame.getState()
   useCoach.getState().set({ hint: null, guard: null })
   useTrain.setState({ kind, drill, status: 'playing', fails: 0, note: '', onEnd, step: firstPlayerStep(drill) })
@@ -118,6 +120,7 @@ function nextPlacement() {
     const score = s.placementScore + (solved ? 1 : 0)
     useTrain.setState({ placementScore: score, note: solved ? 'Correct!' : 'Not this one.' })
     setTimeout(() => {
+      if (useTrain.getState().kind !== 'placement') return // user left the test (review #8)
       if (placementIndex + 1 < PLACEMENT.length) { useTrain.setState({ placementIndex: placementIndex + 1 }); nextPlacement() }
       else { useAcademy.getState().setPlacement(score); useTrain.setState({ status: 'solved', placementIndex: PLACEMENT.length, note: `Placement done: ${score}/5. Stages 1–${Math.min(6, score + 1)} are open.` }) }
     }, 1200)

@@ -48,3 +48,13 @@ describe('toWhitePov', () => {
   it('flips black-to-move score', () => expect(toWhitePov({ scoreCp: 40, depth: 1, pv: [] }, 'b')).toEqual({ cp: -40 }))
   it('flips mate', () => expect(toWhitePov({ mate: 2, depth: 1, pv: [] }, 'b')).toEqual({ mate: -2 }))
 })
+
+import { finalScore } from './uci'
+describe('finalScore (review #2: mate is scored for the winner)', () => {
+  const blackMated = 'rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 1 3' // White to move and mated (fool's mate)
+  const whiteMates = 'R5k1/5ppp/8/8/8/8/5PPP/6K1 b - - 1 1'                        // Black to move and mated
+  it('White mated → Black wins', () => expect(finalScore(blackMated, { mate: 0, depth: 0, pv: [] })).toEqual({ mate: -1 }))
+  it('Black mated → White wins, even when Stockfish says mate 0', () => expect(finalScore(whiteMates, { mate: 0, depth: 0, pv: [] })).toEqual({ mate: 1 }))
+  it('no info and stalemate → 0', () => expect(finalScore('7k/5Q2/6K1/8/8/8/8/8 b - - 0 1', null)).toEqual({ cp: 0 }))
+  it('normal positions flip to White POV', () => expect(finalScore('4k3/8/8/8/8/8/8/4K2R b - - 0 1', { scoreCp: -500, depth: 9, pv: [] })).toEqual({ cp: 500 }))
+})

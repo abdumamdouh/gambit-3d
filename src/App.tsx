@@ -27,7 +27,7 @@ function useEngineTurn() {
 
   useEffect(() => {
     const s = useGame.getState()
-    if (over || dialog || s.turn() === s.playerColor || (s.mode !== 'game' && s.mode !== 'practice')) return
+    if (over || dialog || s.fromHistory || s.turn() === s.playerColor || (s.mode !== 'game' && s.mode !== 'practice')) return
     let live = true
     useApp.getState().set({ thinking: true })
     const started = performance.now()

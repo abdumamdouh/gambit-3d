@@ -1,3 +1,4 @@
+import { Chess } from 'chess.js'
 import type { Score } from '../coach/eval'
 
 export interface UciMove { from: string; to: string; promotion?: string }
@@ -23,4 +24,15 @@ export function parseInfo(line: string): UciInfo | null {
 export function toWhitePov(i: UciInfo, turn: 'w' | 'b'): Score {
   const k = turn === 'w' ? 1 : -1
   return i.mate !== undefined ? { mate: i.mate * k } : { cp: (i.scoreCp ?? 0) * k }
+}
+
+/** Score for a finished search, safe for mated/stalemated positions (Stockfish reports "mate 0" there). */
+export function finalScore(fen: string, info: UciInfo | null): Score {
+  const turn = fen.split(' ')[1] as 'w' | 'b'
+  if (!info || info.mate === 0) {
+    const c = new Chess(fen)
+    if (c.isCheckmate()) return { mate: turn === 'w' ? -1 : 1 }
+    if (!info) return { cp: 0 }
+  }
+  return toWhitePov(info!, turn)
 }

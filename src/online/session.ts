@@ -4,6 +4,7 @@ import { Chess } from 'chess.js'
 import { useGame } from '../game/store'
 import type { Color } from '../game/pieces'
 import * as li from './lichess'
+import { exitTrain } from '../train/session'
 
 const START = new Chess().fen()
 
@@ -20,11 +21,24 @@ interface OnlineState {
 export const useOnline = create<OnlineState>(set => ({ kind: null, status: 'idle', link: '', opponent: '', message: '', user: null, set }))
 
 type Msg = { t: 'start'; hostColor: Color } | { t: 'move'; uci: string; ply: number } | { t: 'resign' }
+const UCI = /^[a-h][1-8][a-h][1-8][qrbn]?$/
+
+/** Peer data is untrusted: accept only well-formed messages (review #6). */
+export function parseMsg(raw: unknown): Msg | null {
+  const m = raw as Record<string, unknown> | null
+  if (!m || typeof m !== 'object') return null
+  if (m.t === 'start' && (m.hostColor === 'w' || m.hostColor === 'b')) return { t: 'start', hostColor: m.hostColor }
+  if (m.t === 'move' && typeof m.uci === 'string' && UCI.test(m.uci) && Number.isInteger(m.ply)) return { t: 'move', uci: m.uci, ply: m.ply as number }
+  if (m.t === 'resign') return { t: 'resign' }
+  return null
+}
 
 let peer: Peer | null = null
 let conn: DataConnection | null = null
 let lichessGame: string | null = null
 let abort: AbortController | null = null
+/** Last move list the Lichess server confirmed; used to resync after a failed move (review #7). */
+let serverMoves = ''
 
 const uciOf = (m: { from: string; to: string; promotion?: string }) => m.from + m.to + (m.promotion ?? '')
 const localUci = () => useGame.getState().history.map(uciOf)
@@ -40,16 +54,20 @@ export function leaveOnline() {
 function wire(c: DataConnection) {
   conn = c
   c.on('data', raw => {
-    const m = raw as Msg
+    const m = parseMsg(raw)
     const g = useGame.getState()
+    const playing = useOnline.getState().status === 'playing'
+    if (!m) return
     if (m.t === 'start') {
+      if (playing) return
       g.loadFen(START, 'online', m.hostColor === 'w' ? 'b' : 'w')
       useOnline.setState({ status: 'playing', opponent: 'Friend', message: '' })
     } else if (m.t === 'move') {
-      if (m.ply !== g.history.length) return // duplicate or out of order
+      if (!playing || g.turn() === g.playerColor || m.ply !== g.history.length) return // not their turn, duplicate or out of order
       const ok = g.move({ from: m.uci.slice(0, 2), to: m.uci.slice(2, 4), promotion: m.uci[4] || undefined })
       if (!ok) useOnline.setState({ status: 'error', message: 'Your friend sent an illegal move. Game stopped.' })
     } else if (m.t === 'resign') {
+      if (!playing || g.result.over) return
       useGame.setState({ result: { over: true, reason: 'resign', winner: g.playerColor } })
     }
   })
@@ -58,11 +76,14 @@ function wire(c: DataConnection) {
 
 export function hostFriendGame(hostColor: Color = 'w') {
   leaveOnline()
+  exitTrain()
   useOnline.setState({ kind: 'friend', status: 'connecting', message: 'Creating your invite link…' })
   peer = new Peer()
   peer.on('open', id => useOnline.setState({ status: 'hosting', link: `${location.origin}/?join=${id}`, message: 'Send this link to your friend. The game starts when they open it.' }))
   peer.on('error', e => useOnline.setState({ status: 'error', message: `Connection error: ${e.type}` }))
   peer.on('connection', c => {
+    // One opponent only: a second tab or a stranger with the link is turned away.
+    if (conn) { c.on('open', () => c.close()); return }
     wire(c)
     c.on('open', () => {
       c.send({ t: 'start', hostColor } satisfies Msg)
@@ -74,6 +95,7 @@ export function hostFriendGame(hostColor: Color = 'w') {
 
 export function joinFriendGame(hostId: string) {
   leaveOnline()
+  exitTrain()
   useOnline.setState({ kind: 'friend', status: 'connecting', message: 'Joining your friend…' })
   peer = new Peer()
   peer.on('open', () => wire(peer!.connect(hostId, { reliable: true })))
@@ -91,6 +113,7 @@ export async function initLichess() {
 
 export async function seekLichess(minutes: number, increment: number) {
   leaveOnline()
+  exitTrain()
   abort = new AbortController()
   const signal = abort.signal
   useOnline.setState({ kind: 'lichess', status: 'seeking', message: `Looking for a ${minutes}+${increment} opponent on Lichess…` })
@@ -106,6 +129,7 @@ async function playLichess(id: string, signal: AbortSignal) {
   lichessGame = id
   const me = useOnline.getState().user?.toLowerCase()
   const apply = (moves: string, wtime?: number, btime?: number, status?: string, winner?: Color) => {
+    serverMoves = moves
     const g = useGame.getState()
     const todo = li.movesToApply(localUci(), moves)
     if (todo === null) { // resync from scratch
@@ -144,7 +168,15 @@ export function onlineMove(from: string, to: string, promotion?: string) {
   if (!mv) return
   const uci = uciOf(mv)
   if (conn) conn.send({ t: 'move', uci, ply } satisfies Msg)
-  if (lichessGame) li.sendMove(lichessGame, uci).then(r => { if (!r.ok) useOnline.setState({ message: 'Lichess rejected the move. Resyncing…' }) })
+  if (lichessGame) {
+    const resync = () => {
+      useOnline.setState({ message: 'Lichess did not accept that move. Board restored.' })
+      const color = useGame.getState().playerColor
+      useGame.getState().loadFen(START, 'online', color)
+      for (const u of serverMoves.split(' ').filter(Boolean)) useGame.getState().move({ from: u.slice(0, 2), to: u.slice(2, 4), promotion: u[4] || undefined })
+    }
+    li.sendMove(lichessGame, uci).then(r => { if (!r.ok) resync() }, resync)
+  }
 }
 
 export function resignOnline() {

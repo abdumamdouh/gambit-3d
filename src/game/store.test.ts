@@ -106,3 +106,25 @@ describe('fromHistory flag', () => {
     expect(g().fromHistory).toBe(false)
   })
 })
+
+describe('review #3/#4 fixes', () => {
+  it('undo does nothing once the game is over', () => {
+    g().newGame({ color: 'w', level: 3, minutes: null })
+    for (const [from, to] of [['f2', 'f3'], ['e7', 'e5'], ['g2', 'g4'], ['d8', 'h4']]) g().move({ from, to })
+    g().undo()
+    expect(g().history).toHaveLength(4)
+    expect(g().result.over).toBe(true)
+  })
+  it('a resigned PGN loads as finished, with the header result', () => {
+    g().loadPgn('[Result "0-1"]\n\n1. e4 e5 2. Nf3 Nc6 0-1')
+    expect(g().result).toEqual({ over: true, reason: 'other', winner: 'b' })
+  })
+  it('a drawn PGN loads as a draw', () => {
+    g().loadPgn('[Result "1/2-1/2"]\n\n1. e4 e5 1/2-1/2')
+    expect(g().result).toEqual({ over: true, reason: 'other', winner: null })
+  })
+  it('an unfinished PGN stays open', () => {
+    g().loadPgn('1. e4 e5 *')
+    expect(g().result.over).toBe(false)
+  })
+})

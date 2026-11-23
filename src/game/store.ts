@@ -100,7 +100,11 @@ export const useGame = create<GameState>((set, get) => ({
     chess = new Chess(start)
     let pieces = fenPieces(start)
     for (const san of sans) pieces = applyMove(pieces, chess.move(san))
-    set({ ...snapshot(pieces), gameId: get().gameId + 1, mode: 'game', startFen: start, fromHistory: true, playerColor: 'w', clock: { w: Infinity, b: Infinity }, minutes: null })
+    const snap = snapshot(pieces)
+    // Board result first; otherwise trust the PGN Result header (resign, timeout, agreed draw) — review #4.
+    const tag = c.getHeaders().Result
+    const result = snap.result.over ? snap.result : tag === '1-0' ? { over: true, reason: 'other' as const, winner: 'w' as const } : tag === '0-1' ? { over: true, reason: 'other' as const, winner: 'b' as const } : tag === '1/2-1/2' ? { over: true, reason: 'other' as const, winner: null } : snap.result
+    set({ ...snap, result, gameId: get().gameId + 1, mode: 'game', startFen: start, fromHistory: true, playerColor: 'w', clock: { w: Infinity, b: Infinity }, minutes: null })
   },
 
   legalMoves: square => (get().result.over ? [] : chess.moves({ square: square as never, verbose: true })),
@@ -123,8 +127,9 @@ export const useGame = create<GameState>((set, get) => ({
   },
 
   undo() {
-    const { history, playerColor } = get()
-    if (!history.length) return
+    const { history, playerColor, result } = get()
+    // A finished game stays finished; it is already reviewed and saved (review #3).
+    if (!history.length || result.over) return
     // Go back to the player's turn: 2 plies if the engine already replied, else 1.
     let n = history.length - 1
     if (n > 0 && history[n].color !== playerColor) n -= 1

@@ -21,11 +21,18 @@ async function tx<T>(mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBReq
 export const saveGame = (g: GameRecord) => tx('readwrite', s => s.put(g)).catch(() => undefined)
 export const allGames = () => tx<GameRecord[]>('readonly', s => s.getAll()).catch(() => [] as GameRecord[])
 
+/** A row is usable only if every field the dashboards read is present (review #12). */
+export function isRecord(r: unknown): r is GameRecord {
+  const x = r as Record<string, unknown> | null
+  const obj = (v: unknown) => !!v && typeof v === 'object'
+  return !!x && typeof x.id === 'string' && typeof x.date === 'number' && typeof x.accuracy === 'number' && obj(x.skills) && obj(x.counts) && obj(x.phases)
+}
+
 /** Import keeps only rows that look like game records. */
 export async function importGames(json: string) {
   const rows = JSON.parse(json)
   if (!Array.isArray(rows)) throw new Error('Not a Gambit 3D export')
-  const ok = rows.filter((r): r is GameRecord => r && typeof r.id === 'string' && typeof r.date === 'number' && typeof r.accuracy === 'number' && r.skills)
+  const ok = rows.filter(isRecord)
   for (const r of ok) await saveGame(r)
   return ok.length
 }

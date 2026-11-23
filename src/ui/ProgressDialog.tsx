@@ -5,6 +5,8 @@ import { gameAccuracy } from '../coach/eval'
 import { useGame } from '../game/store'
 import { runReview } from '../coach/review-store'
 import { useApp } from './app-store'
+import { exitTrain } from '../train/session'
+import { leaveOnline } from '../online/session'
 
 // Validated with dataviz/validate_palette.js on #14161d (dark): all checks pass.
 const NOW_C = '#b8852c'
@@ -96,6 +98,8 @@ export function ProgressDialog({ onClose }: { onClose(): void }) {
 
   const replay = (g: GameRecord) => {
     try {
+      exitTrain()
+      leaveOnline()
       useGame.getState().loadPgn(g.pgn)
       useGame.setState({ playerColor: g.color })
       useApp.getState().set({ dialog: false })

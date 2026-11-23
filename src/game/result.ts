@@ -1,7 +1,7 @@
 import type { Chess } from 'chess.js'
 import type { Color } from './pieces'
 
-export type Reason = 'checkmate' | 'stalemate' | 'threefold' | 'insufficient' | 'fifty' | 'timeout' | 'resign'
+export type Reason = 'checkmate' | 'stalemate' | 'threefold' | 'insufficient' | 'fifty' | 'timeout' | 'resign' | 'other'
 export interface Result { over: boolean; reason?: Reason; winner?: Color | null }
 
 export function gameResult(chess: Chess): Result {

@@ -23,3 +23,11 @@ describe('movesToApply', () => {
   it('flags a mismatch with null', () => expect(movesToApply(['d2d4'], 'e2e4 e7e5')).toBeNull())
   it('handles an empty game', () => expect(movesToApply([], '')).toEqual([]))
 })
+
+import { parseMsg } from './session'
+describe('parseMsg (review #6)', () => {
+  it('accepts a valid move', () => expect(parseMsg({ t: 'move', uci: 'e7e8q', ply: 3 })).toEqual({ t: 'move', uci: 'e7e8q', ply: 3 }))
+  it('rejects a bad uci', () => expect(parseMsg({ t: 'move', uci: 'e2e4; drop', ply: 0 })).toBeNull())
+  it('rejects a bad colour', () => expect(parseMsg({ t: 'start', hostColor: 'x' })).toBeNull())
+  it('rejects non-objects', () => expect(parseMsg('hi')).toBeNull())
+})

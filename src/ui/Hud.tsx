@@ -31,7 +31,7 @@ const TIPS: Record<PieceType, string> = {
 const VAL: Record<PieceType, number> = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 }
 const REASON: Record<string, string> = {
   checkmate: 'by checkmate', stalemate: 'Stalemate — the side to move has no legal move.', insufficient: 'Not enough material to mate.',
-  threefold: 'Same position three times.', fifty: '50 moves without a capture or pawn move.', timeout: 'on time', resign: 'by resignation',
+  threefold: 'Same position three times.', fifty: '50 moves without a capture or pawn move.', timeout: 'on time', resign: 'by resignation', other: '(from the saved game)',
 }
 
 const fmt = (ms: number) => {
@@ -76,6 +76,7 @@ export function Hud() {
   const setCam = useView(s => s.setCam)
   const zoomBy = useView(s => s.zoomBy)
   const reviewOpen = useReview(s => s.open)
+  const reviewGameId = useReview(s => s.gameId)
   const panel = useApp(s => s.panel)
   const setPanel = (p: typeof panel) => useApp.getState().set({ panel: p })
   const training = useTrain(s => s.kind !== null)
@@ -117,7 +118,7 @@ export function Hud() {
         <span className={`clock ${g.turn() === g.playerColor && !g.result.over ? 'on' : ''}`}>{fmt(g.clock[g.playerColor])}</span>
       </div>
 
-      {training ? <TrainPanel /> : reviewOpen ? <ReviewPanel /> : <aside id="coach" className="glass">
+      {training ? <TrainPanel /> : reviewOpen ? <ReviewPanel key={reviewGameId} /> : <aside id="coach" className="glass">
         <h3><i>♛</i>Coach</h3>
         <div id="msg" dangerouslySetInnerHTML={{ __html: coach || '&nbsp;' }} />
         <div id="moves" ref={movesRef}>
@@ -131,7 +132,7 @@ export function Hud() {
         </div>
         <div className="actions">
           <button onClick={() => app.set({ dialog: true })}>New game</button>
-          <button onClick={() => g.undo()} disabled={!g.history.length || app.thinking || isOnline}>↶ Undo</button>
+          <button onClick={() => g.undo()} disabled={!g.history.length || app.thinking || isOnline || g.result.over}>↶ Undo</button>
           <button onClick={() => (isOnline ? resignOnline() : g.resign())} disabled={g.result.over || !g.history.length}>Resign</button>
         </div>
         <div className="actions">

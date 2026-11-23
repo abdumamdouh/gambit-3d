@@ -1,6 +1,6 @@
 import { Chess } from 'chess.js'
 import { goCommand, setupCommands, type Level } from './levels'
-import { parseBestMove, parseInfo, toWhitePov, type UciInfo, type UciMove } from './uci'
+import { finalScore, parseBestMove, parseInfo, type UciInfo, type UciMove } from './uci'
 import type { Score } from '../coach/eval'
 import { fallbackMove } from './fallback'
 
@@ -20,7 +20,12 @@ export class Engine {
       try {
         this.worker = new Worker(ENGINE_URL)
         this.worker.onmessage = e => this.listeners.forEach(l => l(String(e.data)))
-        this.worker.onerror = () => { this.worker = null; resolve(false) }
+        this.worker.onerror = () => {
+          this.worker = null
+          resolve(false)
+          // Release anyone waiting on a search, so the queue cannot hang (review #9).
+          this.listeners.forEach(l => l('bestmove (none)'))
+        }
         const t = setTimeout(() => resolve(false), 15000)
         this.waitFor(l => l === 'uciok', 'uci')
           .then(() => this.waitFor(l => l === 'readyok', 'isready'))
@@ -60,7 +65,6 @@ export class Engine {
   analyse(fen: string, depth: number): Promise<{ score: Score; bestMove: UciMove | null; pv: string[] } | null> {
     const run = async () => {
       if (!(await this.ready) || !this.worker) return null
-      const turn = fen.split(' ')[1] as 'w' | 'b'
       let last: UciInfo | null = null
       const grab: Listener = l => { const i = parseInfo(l); if (i && !l.includes(' multipv 2')) last = i }
       this.listeners.add(grab)
@@ -69,12 +73,7 @@ export class Engine {
       const line = await this.waitFor(l => l.startsWith('bestmove'), `go depth ${depth}`)
       this.listeners.delete(grab)
       const info = last as UciInfo | null
-      if (!info) {
-        // No legal move: mate or stalemate. Report the side to move as lost/drawn.
-        const c = new Chess(fen)
-        return { score: c.isCheckmate() ? { mate: turn === 'w' ? -1 : 1 } : { cp: 0 }, bestMove: null, pv: [] }
-      }
-      return { score: toWhitePov(info, turn), bestMove: parseBestMove(line), pv: info.pv }
+      return { score: finalScore(fen, info), bestMove: parseBestMove(line), pv: info?.pv ?? [] }
     }
     return this.enqueue(run)
   }
