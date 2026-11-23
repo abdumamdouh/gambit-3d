@@ -1,4 +1,6 @@
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
+
+const isDemoUrl = new URLSearchParams(location.search).has('demo')
 import { Scene } from './scene/Scene'
 import { Hud } from './ui/Hud'
 import { useGame } from './game/store'
@@ -30,7 +32,7 @@ function useEngineTurn() {
 
   useEffect(() => {
     const s = useGame.getState()
-    if (over || dialog || s.fromHistory || s.turn() === s.playerColor || (s.mode !== 'game' && s.mode !== 'practice')) return
+    if (over || dialog || useApp.getState().demo || s.fromHistory || s.turn() === s.playerColor || (s.mode !== 'game' && s.mode !== 'practice')) return
     let live = true
     useApp.getState().set({ thinking: true })
     const started = performance.now()
@@ -82,6 +84,9 @@ function useOnlineEntry() {
   useEffect(() => { if (status === 'playing') useApp.getState().set({ panel: null, dialog: false }) }, [status])
 }
 
+// Demo layer is loaded only for ?demo=1, so normal play ships none of it at runtime.
+const DemoLayer = lazy(() => import('./ui/DemoLayer'))
+
 export default function App() {
   useEngineTurn()
   useCoachLoop()
@@ -91,6 +96,7 @@ export default function App() {
     <>
       <Scene />
       <Hud />
+      {isDemoUrl && <Suspense fallback={null}><DemoLayer /></Suspense>}
     </>
   )
 }

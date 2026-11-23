@@ -1,0 +1,62 @@
+# Gambit 3D — LinkedIn demo (~65 s). Record against https://gambit-3d-chess.vercel.app/?demo=1
+# Each beat clicks one hidden #demo-N step button; waits cover the scripted action so beats never overlap.
+beats:
+- say: I wanted to get better at chess. So I built my own coach — in 3D.
+  zoom: true
+  actions:
+  - type: wait
+    ms: 1200
+  - type: click
+    selector: '#demo-1'
+  - type: wait
+    ms: 3200
+- say: Play Stockfish at eight levels, right in the browser. Every rule, every move.
+  actions:
+  - type: click
+    selector: '#demo-2'
+  - type: wait
+    ms: 10500
+- say: It stops my blunders before I make them.
+  zoom: true
+  actions:
+  - type: click
+    selector: '#demo-3'
+  - type: wait
+    ms: 4200
+- say: And when I'm stuck, it shows me the better move.
+  actions:
+  - type: click
+    selector: '#demo-4'
+  - type: wait
+    ms: 6200
+- say: After every game, it reviews each move and explains my mistakes in plain words.
+  actions:
+  - type: click
+    selector: '#demo-5'
+  - type: wait
+    ms: 7500
+- say: It learns my style across games, and turns my own mistakes into lessons.
+  zoom: true
+  actions:
+  - type: click
+    selector: '#demo-6'
+  - type: wait
+    ms: 6000
+- say: Lessons from zero, real puzzles from Lichess, and four board styles.
+  actions:
+  - type: click
+    selector: '#demo-7'
+  - type: wait
+    ms: 9500
+- say: It's free, open source, and works offline — even on my phone.
+  actions:
+  - type: click
+    selector: '#demo-8'
+  - type: wait
+    ms: 4000
+- say: Gambit 3D. Built in one day with Claude Code. Link in the comments.
+  actions:
+  - type: click
+    selector: '#demo-9'
+  - type: wait
+    ms: 4000

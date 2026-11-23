@@ -8,5 +8,8 @@ export const useApp = create<{
   thinking: boolean
   dialog: boolean
   panel: Panel
-  set(p: Partial<{ engine: EngineStatus; thinking: boolean; dialog: boolean; panel: Panel }>): void
-}>(set => ({ engine: 'loading', thinking: false, dialog: true, panel: null, set }))
+  /** Demo mode (?demo=1): scripted video showcase. */
+  demo: boolean
+  endCard: boolean
+  set(p: Partial<{ engine: EngineStatus; thinking: boolean; dialog: boolean; panel: Panel; demo: boolean; endCard: boolean }>): void
+}>(set => ({ engine: 'loading', thinking: false, dialog: true, panel: null, demo: false, endCard: false, set }))
