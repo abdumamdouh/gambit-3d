@@ -227,3 +227,23 @@ label.check{display:flex;gap:8px;align-items:center;text-transform:none;letter-s
 label.check input{accent-color:var(--gold)}
 @media (max-width:760px){#board2d{top:44%;width:94vw}}
 @media (min-width:761px){#board2d{top:calc(50% + 34px);left:calc(50% - 170px);width:min(76vh,calc(100vw - 420px))}}
+
+/* ---------- My Coach ---------- */
+.mycoach{width:min(640px,100%);text-align:left;margin-top:56px;max-height:calc(100vh - 100px);overflow:auto}
+.mycoach h4{margin:18px 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--mute);font-weight:500}
+.mycoach > .primary{margin-top:12px}
+.letter{background:linear-gradient(135deg,rgba(226,180,92,.1),rgba(79,209,197,.06));border:1px solid rgba(226,180,92,.3);border-radius:14px;padding:14px}
+.letter pre{white-space:pre-wrap;font:14px/1.6 Inter,system-ui,sans-serif;margin:0 0 8px;color:#ece8df}
+.small-btn{padding:8px 12px;font-size:12px;margin-top:6px}
+.weak-list{display:flex;flex-direction:column;gap:8px}
+.weak{background:rgba(255,255,255,.03);border:1px solid var(--edge);border-radius:12px;padding:10px 12px}
+.weak .top{display:flex;justify-content:space-between;gap:8px}
+.weak .top small{color:var(--mute)}
+.weak .sev{height:6px;border-radius:4px;background:rgba(255,255,255,.06);margin:6px 0}
+.weak .sev div{height:100%;border-radius:4px;background:#b8852c}
+.weak p{margin:4px 0 8px}
+.weak .btns{display:flex;flex-wrap:wrap;gap:6px}
+.weak .btns button{background:rgba(255,255,255,.05);border:1px solid var(--edge);border-radius:9px;padding:5px 10px;font-size:12px}
+.weak .btns button:hover{border-color:var(--gold)}
+.strengths{margin:0;padding-left:0;list-style:none;color:#7ee08a;font-size:13px}
+code{background:#0c0d12;border-radius:5px;padding:1px 5px;font-size:12px}

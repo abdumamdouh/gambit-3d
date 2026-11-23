@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 
 export type EngineStatus = 'loading' | 'ready' | 'fallback'
-export type Panel = null | 'progress' | 'style' | 'academy' | 'tactics' | 'online'
+export type Panel = null | 'progress' | 'style' | 'academy' | 'tactics' | 'online' | 'mycoach'
 
 export const useApp = create<{
   engine: EngineStatus

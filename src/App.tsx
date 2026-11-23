@@ -48,7 +48,7 @@ function useCoachLoop() {
   const gameId = useGame(s => s.gameId)
   const over = useGame(s => s.result.over)
   useEffect(() => { useCoach.getState().set({ hint: null, guard: null }) }, [fen])
-  useEffect(() => { useCoach.getState().set({ score: null, hintsUsed: 0 }); useReview.getState().set({ open: false, status: 'idle', gameId: -1 }) }, [gameId])
+  useEffect(() => { useCoach.getState().set({ score: null, hintsUsed: 0 }); if (useReview.getState().gameId !== gameId) useReview.getState().set({ open: false, status: 'idle', gameId: -1 }) }, [gameId])
   useEffect(() => { if (!useApp.getState().dialog && useGame.getState().mode !== 'online') void refreshEval(fen) }, [fen])
   useEffect(() => { const s = useGame.getState(); if (over && s.mode === 'game' && !useTrain.getState().kind && s.history.length >= 6) void runReview() }, [over])
   useEffect(() => { checkTrainResult() }, [fen, over])

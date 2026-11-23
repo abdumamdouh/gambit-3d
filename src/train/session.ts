@@ -5,7 +5,7 @@ import { judge, firstPlayerStep, uciToMove, type Drill } from './drill'
 import { PLACEMENT, allLessons } from './academy'
 import { useAcademy } from './progress'
 
-export type TrainKind = 'lesson' | 'placement' | 'puzzle'
+export type TrainKind = 'lesson' | 'placement' | 'puzzle' | 'personal'
 export type TrainStatus = 'playing' | 'wrong' | 'solved' | 'failed'
 
 interface TrainState {
@@ -72,7 +72,7 @@ export async function drillMove(from: string, to: string, promotion?: string) {
   if (v === 'wrong') {
     const fails = t.fails + 1
     useTrain.setState({ status: 'wrong', fails, note: 'Not quite. Look again.' })
-    if (t.kind !== 'lesson') { end(false); return }
+    if (t.kind !== 'lesson' && t.kind !== 'personal') { end(false); return }
     await wait(900)
     if (useTrain.getState().drill === t.drill) { useGame.getState().undo(); useTrain.setState({ status: 'playing', note: '' }) }
     return

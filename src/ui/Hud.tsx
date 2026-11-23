@@ -13,6 +13,7 @@ import { ProgressDialog } from './ProgressDialog'
 import { ThemePicker } from './ThemePicker'
 import { AcademyDialog, TacticsDialog, TrainPanel } from './TrainUi'
 import { OnlineDialog } from './OnlineUi'
+import { MyCoachDialog } from './MyCoach'
 import { exportPgn } from '../polish/pgn'
 import { useSettings } from '../polish/settings'
 import { useOnline, resignOnline, leaveOnline } from '../online/session'
@@ -98,6 +99,7 @@ export function Hud() {
       <div id="tools">
         <button onClick={() => setPanel('academy')} title="Academy">🎓<span> Academy</span></button>
         <button onClick={() => setPanel('tactics')} title="Tactics trainer">⚔<span> Tactics</span></button>
+        <button onClick={() => setPanel('mycoach')} title="My Coach: your style and personal lessons">🧠<span> My Coach</span></button>
         <button onClick={() => setPanel('online')} title="Play online">🌐<span> Online</span></button>
         <button onClick={() => setPanel('progress')} title="Your progress">📈<span> Progress</span></button>
         <button onClick={() => setPanel('style')} title="Board style">🎨<span> Style</span></button>
@@ -162,6 +164,7 @@ export function Hud() {
       {panel === 'academy' && <AcademyDialog onClose={() => setPanel(null)} />}
       {panel === 'tactics' && <TacticsDialog onClose={() => setPanel(null)} />}
       {panel === 'online' && <OnlineDialog onClose={() => setPanel(null)} />}
+      {panel === 'mycoach' && <MyCoachDialog onClose={() => setPanel(null)} />}
     </>
   )
 }

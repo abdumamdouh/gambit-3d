@@ -28,7 +28,7 @@ interface ReviewState {
 export const useReview = create<ReviewState>(set => ({ status: 'idle', open: false, progress: 0, plies: [], pv: [], record: null, index: 0, gameId: -1, set }))
 
 /** Analyse the whole finished game, then save its Skill Report. */
-export async function runReview() {
+export async function runReview(opts: { save?: boolean } = {}) {
   const g = useGame.getState()
   const r = useReview.getState()
   if (r.gameId === g.gameId && r.status !== 'idle') { r.set({ open: true }); return }
@@ -46,7 +46,7 @@ export async function runReview() {
   const plies: ReviewedPly[] = history.map((m, i) => ({ ...reviewPly(fens[i], m, an[i], an[i + 1], i + 1), phase: phaseOf(fens[i], i + 1), fen: fens[i] }))
   const { result, playerColor, level } = useGame.getState()
   let record: GameRecord | null = null
-  if (result.over && useGame.getState().mode === 'game' && plies.filter(p => p.color === playerColor).length >= 3) {
+  if (opts.save !== false && !useGame.getState().fromHistory && result.over && useGame.getState().mode === 'game' && plies.filter(p => p.color === playerColor).length >= 3) {
     const pgnChess = new Chess()
     history.forEach(h => pgnChess.move(h.san))
     record = buildRecord(plies, {

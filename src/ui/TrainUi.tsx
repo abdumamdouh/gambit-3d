@@ -5,6 +5,7 @@ import { useTrain, startDrill, startPlacement, drillHint, exitTrain, nextLesson 
 import { usePuzzles, nextPuzzle } from '../train/puzzle-store'
 import { THEMES } from '../train/puzzles'
 import { useApp } from './app-store'
+import { personalProgress, nextPersonal } from '../train/personal'
 
 export function AcademyDialog({ onClose }: { onClose(): void }) {
   const { done, xp, placement } = useAcademy()
@@ -87,7 +88,8 @@ export function TrainPanel() {
   const quit = () => { exitTrain(); useApp.getState().set({ dialog: true }) }
   return (
     <aside id="coach" className="glass train">
-      <h3><i>{t.kind === 'puzzle' ? '⚔' : '🎓'}</i>{d.title}<button className="x" onClick={quit} aria-label="Exit">✕</button></h3>
+      <h3><i>{t.kind === 'puzzle' ? '⚔' : t.kind === 'personal' ? '🎯' : '🎓'}</i>{d.title}<button className="x" onClick={quit} aria-label="Exit">✕</button></h3>
+      {t.kind === 'personal' && <p className="small mute">Position {personalProgress().index + 1} of {personalProgress().total}</p>}
       {t.kind === 'puzzle' && <p className="small mute">Your rating {rating}{d.rating ? ` · puzzle ${d.rating}` : ''}</p>}
       <p className="lesson-text">{d.text}</p>
       {!finished && !practice && <p className="small mute">{turn === player ? 'Your move.' : 'Watch the reply…'}</p>}
@@ -99,6 +101,7 @@ export function TrainPanel() {
         {!finished && !practice && <button className="hint" onClick={drillHint}>💡 Hint</button>}
         <button onClick={() => startDrill(d, t.kind!, t.onEnd)} disabled={t.kind === 'placement'}>↺ Retry</button>
         {t.kind === 'placement' && t.placementIndex >= 5 && <button className="primary-sm" onClick={() => { exitTrain(); useApp.getState().set({ panel: 'academy' }) }}>🎓 Open Academy</button>}
+        {t.kind === 'personal' && finished && personalProgress().index + 1 < personalProgress().total && <button className="primary-sm" onClick={nextPersonal}>Next position ›</button>}
         {t.kind === 'puzzle' && <button className="primary-sm" onClick={() => nextPuzzle()}>Next puzzle ›</button>}
         {t.kind === 'lesson' && next && finished && <button className="primary-sm" onClick={() => startDrill(next, 'lesson')}>Next lesson ›</button>}
       </div>

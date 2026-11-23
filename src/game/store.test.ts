@@ -97,3 +97,12 @@ describe('loadPgn', () => {
   })
   it('throws on garbage', () => expect(() => g().loadPgn('not a game 1. Zz9')).toThrow())
 })
+
+describe('fromHistory flag', () => {
+  it('is set for loaded PGNs and cleared by a new game', () => {
+    g().loadPgn('1. e4 e5 2. Bc4 Nc6 3. Qh5 Nf6 4. Qxf7# 1-0')
+    expect(g().fromHistory).toBe(true)
+    g().newGame({ color: 'w', level: 3, minutes: null })
+    expect(g().fromHistory).toBe(false)
+  })
+})

@@ -94,6 +94,15 @@ export function ProgressDialog({ onClose }: { onClose(): void }) {
   const rating = ratingEstimate(all)
   const last10 = all.slice(-10)
 
+  const replay = (g: GameRecord) => {
+    try {
+      useGame.getState().loadPgn(g.pgn)
+      useGame.setState({ playerColor: g.color })
+      useApp.getState().set({ dialog: false })
+      onClose()
+      void runReview({ save: false })
+    } catch { setMsg('This game could not be loaded.') }
+  }
   const exportJson = () => {
     const a = document.createElement('a')
     a.href = URL.createObjectURL(new Blob([JSON.stringify(all, null, 1)], { type: 'application/json' }))
@@ -124,10 +133,10 @@ export function ProgressDialog({ onClose }: { onClose(): void }) {
             <SkillBars now={recent} then={old} />
             <h4>Recent games</h4>
             <table className="games">
-              <thead><tr><th>Date</th><th>Result</th><th>Level</th><th>Accuracy</th><th>Blunders</th></tr></thead>
+              <thead><tr><th>Date</th><th>Result</th><th>Level</th><th>Accuracy</th><th>Blunders</th><th></th></tr></thead>
               <tbody>
                 {[...all].reverse().slice(0, 8).map(g => (
-                  <tr key={g.id}><td>{new Date(g.date).toLocaleDateString()}</td><td className={g.result}>{g.result}</td><td>{g.level}</td><td>{Math.round(g.accuracy)}%</td><td>{g.counts.blunder}</td></tr>
+                  <tr key={g.id}><td>{new Date(g.date).toLocaleDateString()}</td><td className={g.result}>{g.result}</td><td>{g.level}</td><td>{Math.round(g.accuracy)}%</td><td>{g.counts.blunder}</td><td>{g.pgn && <button className="linkish" onClick={() => replay(g)}>Replay</button>}</td></tr>
                 ))}
               </tbody>
             </table>

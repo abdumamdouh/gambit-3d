@@ -27,6 +27,8 @@ export interface GameState {
   /** game = vs engine; drill = scripted lesson/puzzle; practice = goal vs engine; online = remote opponent. */
   mode: Mode
   startFen: string
+  /** True for games loaded from PGN/history: they are reviewed but never saved again. */
+  fromHistory: boolean
   /** Review mode: show the position after this many plies (null = live). */
   viewPly: number | null
   setViewPly(p: number | null): void
@@ -74,19 +76,20 @@ export const useGame = create<GameState>((set, get) => ({
   gameId: 0,
   mode: 'game',
   startFen: START,
+  fromHistory: false,
   viewPly: null,
   setViewPly: p => set({ viewPly: p, selected: null }),
 
   newGame({ color, level, minutes }) {
     chess = new Chess()
     const ms = minutes ? minutes * 60000 : Infinity
-    set({ ...snapshot(initialPieces()), playerColor: color, level, minutes, clock: { w: ms, b: ms }, gameId: get().gameId + 1, mode: 'game', startFen: START })
+    set({ ...snapshot(initialPieces()), playerColor: color, level, minutes, clock: { w: ms, b: ms }, gameId: get().gameId + 1, mode: 'game', startFen: START, fromHistory: false })
   },
 
   // Lessons, puzzles, practice and online games start here. Pieces get fresh ids.
   loadFen(fen, mode = 'drill', playerColor) {
     chess = new Chess(fen)
-    set({ ...snapshot(fenPieces(fen)), gameId: get().gameId + 1, mode, startFen: fen, playerColor: playerColor ?? chess.turn(), clock: { w: Infinity, b: Infinity }, minutes: null })
+    set({ ...snapshot(fenPieces(fen)), gameId: get().gameId + 1, mode, startFen: fen, fromHistory: false, playerColor: playerColor ?? chess.turn(), clock: { w: Infinity, b: Infinity }, minutes: null })
   },
 
   loadPgn(pgn) {
@@ -97,7 +100,7 @@ export const useGame = create<GameState>((set, get) => ({
     chess = new Chess(start)
     let pieces = fenPieces(start)
     for (const san of sans) pieces = applyMove(pieces, chess.move(san))
-    set({ ...snapshot(pieces), gameId: get().gameId + 1, mode: 'game', startFen: start, playerColor: 'w', clock: { w: Infinity, b: Infinity }, minutes: null })
+    set({ ...snapshot(pieces), gameId: get().gameId + 1, mode: 'game', startFen: start, fromHistory: true, playerColor: 'w', clock: { w: Infinity, b: Infinity }, minutes: null })
   },
 
   legalMoves: square => (get().result.over ? [] : chess.moves({ square: square as never, verbose: true })),

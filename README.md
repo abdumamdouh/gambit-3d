@@ -34,6 +34,13 @@ npm test         # vitest
 npm run build    # production build in dist/
 ```
 
+## 🧠 My Coach (style analysis + personal lessons)
+- Every finished game saves its mistakes (position, your move, Stockfish's move, label, phase), opening and castling move — on your device (IndexedDB)
+- A style analyzer reads **all** your games: hanging pieces, missed tactics, allowed mates, blunders, late castling, early queen, weak openings/endgames — with evidence and trend
+- A lesson generator turns your own mistake positions into drills ("find the move Stockfish wanted"), and links the matching Academy lessons and puzzle themes
+- Optional study-plan letter from your local Qwen (LM Studio). Only summary numbers are sent; any move Qwen names that is not in your data is rejected
+- Replay and re-review any saved game from 📈 Progress
+
 ## Stack
 Vite · React 19 · TypeScript · three.js · React Three Fiber · drei · postprocessing · chess.js · zustand · Stockfish.js
 
