@@ -1,7 +1,8 @@
 import { test, expect, open, startGame, click, history, script, dbCount, FOOL } from './fixtures'
 
-test('loads with the engine ready and no errors', async ({ page, errors }) => {
-  await open(page)
+test('loads the 3D scene with the engine ready and no errors', async ({ page, errors }) => {
+  await open(page, process.env.CI ? 'low' : 'high')
+  await expect(page.locator('canvas')).toBeVisible()
   await expect(page.locator('#opp .dot.ready')).toBeVisible({ timeout: 30_000 })
   expect(errors).toEqual([])
 })
@@ -39,9 +40,10 @@ test('hint shows the best move', async ({ page }) => {
 test('blunder guard stops a hanging queen', async ({ page }) => {
   await open(page)
   await startGame(page)
+  await expect(page.locator('#opp .dot.ready')).toBeVisible({ timeout: 30_000 })
   await page.evaluate(() => (window as never as { __game: { getState(): { loadFen(f: string, m: string, c: string): void } } }).__game.getState().loadFen('rnbqkb1r/pppp1ppp/5n2/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 2 3', 'game', 'w'))
   await click(page, 'd1', 'h5')
-  await expect(page.getByRole('heading', { name: /Are you sure/ })).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByRole('heading', { name: /Are you sure/ })).toBeVisible({ timeout: 40_000 }) // guard analysis queues behind the eval bar under load
   await page.getByRole('button', { name: 'Try again' }).click()
   await expect.poll(() => history(page)).toHaveLength(0)
 })

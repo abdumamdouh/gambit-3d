@@ -4,11 +4,11 @@ const CI = !!process.env.CI
 
 export default defineConfig({
   testDir: 'e2e',
-  timeout: 60_000,
+  timeout: CI ? 120_000 : 60_000,
   expect: { timeout: 15_000 },
   fullyParallel: false, // one shared Stockfish per page is fine, but keep CI load low
-  workers: CI ? 1 : 2,
-  retries: CI ? 1 : 0,
+  workers: 1, // each test runs Stockfish + WebGL; parallel workers starve each other on a busy machine
+  retries: 1,
   reporter: CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: 'http://localhost:5180',

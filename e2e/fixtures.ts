@@ -12,8 +12,12 @@ export const test = base.extend<{ errors: string[] }>({
 })
 export { expect }
 
+/** CI machines have no GPU: software WebGL blocks the page, so flow tests use the 2D board there. */
+export const CI_QUALITY = process.env.CI ? 'flat' : 'high'
+
 /** Open the app with dev handles ready. */
-export async function open(page: Page) {
+export async function open(page: Page, quality = CI_QUALITY) {
+  await page.addInitScript(q => { if (!localStorage.getItem('g3d.settings')) localStorage.setItem('g3d.settings', JSON.stringify({ quality: q, sound: false, voice: false })) }, quality)
   await page.goto('/')
   await page.waitForFunction(() => '__game' in window && '__click' in window && '__train' in window)
 }

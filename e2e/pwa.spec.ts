@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 test('installable and playable offline after the first visit', async ({ page, context }) => {
+  await page.addInitScript(() => { if (!localStorage.getItem('g3d.settings')) localStorage.setItem('g3d.settings', JSON.stringify({ quality: 'flat', sound: false, voice: false })) })
   await page.goto('/')
   const manifest = await page.evaluate(async () => (await fetch('/manifest.webmanifest')).json())
   expect(manifest.icons.map((i: { sizes: string }) => i.sizes)).toEqual(expect.arrayContaining(['192x192', '512x512']))
@@ -11,9 +12,6 @@ test('installable and playable offline after the first visit', async ({ page, co
   await page.reload()
   await page.getByRole('button', { name: 'Play', exact: true }).click()
   await expect(page.locator('#opp .dot.ready')).toBeVisible({ timeout: 30_000 }) // engine came from the cache
-  await page.getByTitle('Board style').click()
-  await page.getByRole('button', { name: '2D board' }).click()
-  await page.getByRole('button', { name: 'Close' }).click()
   await page.getByRole('button', { name: /^e2/ }).click()
   await page.getByRole('button', { name: /^e4/ }).click()
   await expect(page.locator('#moves .row')).toContainText('e4')

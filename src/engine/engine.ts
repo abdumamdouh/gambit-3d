@@ -14,6 +14,10 @@ export class Engine {
   private listeners = new Set<Listener>()
   private queue: Promise<unknown> = Promise.resolve()
   ready: Promise<boolean>
+  /** True once Stockfish answered readyok — even if that came after the start timeout. */
+  isReady = false
+  /** Called when the engine status changes (late start included). */
+  onStatus: (ok: boolean) => void = () => {}
 
   constructor() {
     this.ready = new Promise(resolve => {
@@ -22,14 +26,17 @@ export class Engine {
         this.worker.onmessage = e => this.listeners.forEach(l => l(String(e.data)))
         this.worker.onerror = () => {
           this.worker = null
+          this.isReady = false
           resolve(false)
+          this.onStatus(false)
           // Release anyone waiting on a search, so the queue cannot hang (review #9).
           this.listeners.forEach(l => l('bestmove (none)'))
         }
-        const t = setTimeout(() => resolve(false), 15000)
+        // Slow device: after 15 s play the fallback bot, but keep waiting — a late start still upgrades to Stockfish.
+        const t = setTimeout(() => { resolve(false); this.onStatus(false) }, 15000)
         this.waitFor(l => l === 'uciok', 'uci')
           .then(() => this.waitFor(l => l === 'readyok', 'isready'))
-          .then(() => { clearTimeout(t); resolve(true) })
+          .then(() => { clearTimeout(t); this.isReady = true; resolve(true); this.onStatus(true) })
       } catch { resolve(false) }
     })
   }
@@ -52,7 +59,8 @@ export class Engine {
     const run = async (): Promise<UciMove> => {
       const chess = new Chess(fen)
       if (level.randomness && Math.random() < level.randomness) return fallbackMove(chess, true)
-      if (!(await this.ready) || !this.worker) return fallbackMove(chess)
+      await this.ready
+      if (!this.isReady || !this.worker) return fallbackMove(chess)
       setupCommands(level).forEach(c => this.send(c))
       this.send(`position fen ${fen}`)
       const line = await this.waitFor(l => l.startsWith('bestmove'), goCommand(level))
@@ -64,7 +72,8 @@ export class Engine {
   /** Full-strength analysis. Score is from White's view. */
   analyse(fen: string, depth: number): Promise<{ score: Score; bestMove: UciMove | null; pv: string[] } | null> {
     const run = async () => {
-      if (!(await this.ready) || !this.worker) return null
+      await this.ready
+      if (!this.isReady || !this.worker) return null
       let last: UciInfo | null = null
       const grab: Listener = l => { const i = parseInfo(l); if (i && !l.includes(' multipv 2')) last = i }
       this.listeners.add(grab)
