@@ -19,8 +19,13 @@ export default defineConfig({
     launchOptions: { args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'] },
   },
   projects: [
-    { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } } },
+    { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } }, testIgnore: /pwa\.spec\.ts|layout\.spec\.ts/ },
     { name: 'phone', use: { ...devices['Pixel 7'] }, testMatch: /layout\.spec\.ts/ },
+    // Production build: service worker, offline play.
+    { name: 'pwa', use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:5190' }, testMatch: /pwa\.spec\.ts/ },
   ],
-  webServer: { command: 'npm run dev -- --port 5180 --strictPort', url: 'http://localhost:5180', reuseExistingServer: !CI, timeout: 60_000 },
+  webServer: [
+    { command: 'npm run dev -- --port 5180 --strictPort', url: 'http://localhost:5180', reuseExistingServer: !CI, timeout: 60_000 },
+    { command: 'npx vite preview --port 5190 --strictPort', url: 'http://localhost:5190', reuseExistingServer: !CI, timeout: 60_000 },
+  ],
 })

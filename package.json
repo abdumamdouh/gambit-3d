@@ -11,7 +11,7 @@
     "test": "vitest run",
     "predev": "node scripts/copy-engine.mjs",
     "prebuild": "node scripts/copy-engine.mjs",
-    "e2e": "playwright test"
+    "e2e": "vite build && playwright test"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",

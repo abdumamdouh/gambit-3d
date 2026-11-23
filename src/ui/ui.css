@@ -247,3 +247,4 @@ label.check input{accent-color:var(--gold)}
 .weak .btns button:hover{border-color:var(--gold)}
 .strengths{margin:0;padding-left:0;list-style:none;color:#7ee08a;font-size:13px}
 code{background:#0c0d12;border-radius:5px;padding:1px 5px;font-size:12px}
+table.games tr.dev td{color:#f2c94c}

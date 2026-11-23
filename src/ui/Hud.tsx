@@ -16,6 +16,7 @@ import { OnlineDialog } from './OnlineUi'
 import { MyCoachDialog } from './MyCoach'
 import { exportPgn } from '../polish/pgn'
 import { useSettings } from '../polish/settings'
+import { useInstall, install } from '../polish/install'
 import { useOnline, resignOnline, leaveOnline } from '../online/session'
 import { useTrain, exitTrain } from '../train/session'
 
@@ -83,6 +84,7 @@ export function Hud() {
   const online = useOnline()
   const isOnline = g.mode === 'online'
   const flat = useSettings(s => s.quality) === 'flat'
+  const canInstall = useInstall(s => !!s.evt)
   const coach = useCoachText()
   const movesRef = useRef<HTMLDivElement>(null)
   const opp: Color = g.playerColor === 'w' ? 'b' : 'w'
@@ -103,6 +105,7 @@ export function Hud() {
         <button onClick={() => setPanel('mycoach')} title="My Coach: your style and personal lessons">🧠<span> My Coach</span></button>
         <button onClick={() => setPanel('online')} title="Play online">🌐<span> Online</span></button>
         <button onClick={() => setPanel('progress')} title="Your progress">📈<span> Progress</span></button>
+        {canInstall && <button onClick={install} title="Install Gambit 3D as an app">⬇<span> Install</span></button>}
         <button onClick={() => setPanel('style')} title="Board style">🎨<span> Style</span></button>
       </div>
       <EvalBar />

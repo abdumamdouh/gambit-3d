@@ -11,8 +11,10 @@ import { useCoach } from './coach/coach-store'
 import { useReview, runReview } from './coach/review-store'
 import './scene/themes'
 import { initSound } from './polish/sound'
+import { initVoice } from './polish/voice'
 
 initSound()
+initVoice()
 import { useTrain, checkTrainResult } from './train/session'
 import { useOnline, joinFriendGame, initLichess } from './online/session'
 
