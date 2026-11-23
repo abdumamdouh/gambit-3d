@@ -5,6 +5,10 @@ import { useGame, piecesAt } from '../game/store'
 import type { Piece } from '../game/pieces'
 import { makePiece, sqPos } from './geometry'
 import { onSquareClick } from './input'
+import { useView } from './view'
+
+const HIT = new THREE.CylinderGeometry(0.4, 0.4, 1.3, 12)
+const HIT_MAT = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, colorWrite: false })
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 const MOVE_S = 0.48
@@ -53,18 +57,21 @@ function PieceMesh({ piece, selected }: { piece: Piece; selected: boolean }) {
   })
 
   const click = (e: ThreeEvent<MouseEvent>) => {
-    if (e.delta > 5 || piece.captured) return
+    if (e.delta > 8 || piece.captured) return
     e.stopPropagation()
     onSquareClick(piece.square)
   }
 
+  // Input: a 12-sided invisible cylinder per piece. Clicking a piece's head picks that piece,
+  // not the square behind it, and costs ~1% of raycasting the detailed mesh.
   return (
-    <primitive
-      object={obj}
-      onClick={click}
-      onPointerOver={(e: ThreeEvent<PointerEvent>) => { e.stopPropagation(); document.body.style.cursor = 'pointer' }}
-      onPointerOut={() => { document.body.style.cursor = 'default' }}
-    />
+    <primitive object={obj}>
+      {!piece.captured && (
+        <mesh geometry={HIT} material={HIT_MAT} position-y={0.62} onClick={click}
+          onPointerMove={(e: ThreeEvent<PointerEvent>) => { e.stopPropagation(); useView.getState().setHover(piece.square) }}
+          onPointerOut={() => useView.getState().setHover(null)} />
+      )}
+    </primitive>
   )
 }
 

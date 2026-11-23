@@ -1,9 +1,10 @@
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import { useGame } from '../game/store'
 import { glow, sqPos } from './geometry'
 import { Arrow } from './Arrow'
+import { useView } from './view'
 import { useCoach } from '../coach/coach-store'
 import { useReview } from '../coach/review-store'
 
@@ -16,6 +17,7 @@ const MAT = {
   sel: glow(0xe2b45c, 2.2),
   last: glow(0xe2b45c, 1, 0.22),
   check: glow(0xff3b3b, 1.4, 0.55),
+  hover: glow(0x4fd1c5, 1.3, 0.42),
 }
 const FLAT = [-Math.PI / 2, 0, 0] as const
 
@@ -31,6 +33,8 @@ export function Markers() {
   const pieces = useGame(s => s.pieces)
   const legalMoves = useGame(s => s.legalMoves)
   const pulse = useRef<THREE.Group>(null)
+  const hover = useView(s => s.hover)
+  const playerColor = useGame(s => s.playerColor)
 
   const moves = useMemo(() => (selected ? legalMoves(selected) : []), [selected, fen, legalMoves]) // eslint-disable-line react-hooks/exhaustive-deps
   const checkSq = useMemo(() => {
@@ -39,6 +43,12 @@ export function Markers() {
     if (!h?.san.match(/[+#]/)) return null
     return pieces.find(p => !p.captured && p.type === 'k' && p.color === s.turn())?.square ?? null
   }, [fen, pieces]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Show what a click will do: own piece → select, legal target → move.
+  const own = hover ? pieces.some(p => !p.captured && p.square === hover && p.color === playerColor) : false
+  const target = hover ? moves.some(m => m.to === hover) : false
+  const clickable = viewPly === null && (own || target)
+  useEffect(() => { document.body.style.cursor = clickable ? 'pointer' : 'default' }, [clickable])
 
   useFrame(({ clock }) => {
     const s = 1 + Math.sin(clock.elapsedTime * 4) * 0.12
@@ -53,6 +63,7 @@ export function Markers() {
       {viewPly === null && hint && <Arrow from={hint.from} to={hint.to} />}
       {review?.best && review.label !== 'best' && <Arrow from={review.best.from} to={review.best.to} />}
       {viewPly === null && checkSq && <mesh geometry={tileGeo} material={MAT.check} rotation={FLAT} position={sqPos(checkSq).setY(0.003)} />}
+      {clickable && hover !== selected && <mesh geometry={tileGeo} material={MAT.hover} rotation={FLAT} position={sqPos(hover!).setY(0.003)} />}
       {selected && <mesh geometry={ringGeo} material={MAT.sel} rotation={FLAT} position={sqPos(selected).setY(0.004)} />}
       <group ref={pulse}>
         {moves.map(m => {

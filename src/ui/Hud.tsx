@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { useGame } from '../game/store'
+import { useGame, type GameState } from '../game/store'
+import { useShallow } from 'zustand/react/shallow'
 import { playerMove } from '../train/route'
 import type { Color, PieceType } from '../game/pieces'
 import { LEVELS } from '../engine/levels'
@@ -35,6 +36,19 @@ const REASON: Record<string, string> = {
   threefold: 'Same position three times.', fifty: '50 moves without a capture or pawn move.', timeout: 'on time', resign: 'by resignation', other: '(from the saved game)',
 }
 
+/** Everything but the clock: the clock ticks 10×/s and must not re-render the whole HUD. */
+function noClock(s: GameState): Omit<GameState, 'clock'> {
+  const { clock: _ignored, ...rest } = s // eslint-disable-line @typescript-eslint/no-unused-vars
+  return rest
+}
+
+/** Only this re-renders on each clock tick. */
+function ClockView({ color }: { color: Color }) {
+  const ms = useGame(s => s.clock[color])
+  const on = useGame(s => !s.result.over && s.fen.split(' ')[1] === color)
+  return <span className={`clock ${on ? 'on' : ''}`}>{fmt(ms)}</span>
+}
+
 const fmt = (ms: number) => {
   if (!isFinite(ms)) return '∞'
   const s = Math.ceil(ms / 1000)
@@ -42,7 +56,7 @@ const fmt = (ms: number) => {
 }
 
 function useCoachText(): string {
-  const { selected, pieces, history, result, playerColor } = useGame()
+  const { selected, pieces, history, result, playerColor } = useGame(useShallow(s => ({ selected: s.selected, pieces: s.pieces, history: s.history, result: s.result, playerColor: s.playerColor })))
   const thinking = useApp(s => s.thinking)
   const hint = useCoach(s => s.hint)
   const checking = useCoach(s => s.checking)
@@ -71,11 +85,13 @@ function useCoachText(): string {
 }
 
 export function Hud() {
-  const g = useGame()
+  const g = useGame(useShallow(noClock))
   const app = useApp()
   const cam = useView(s => s.cam)
   const setCam = useView(s => s.setCam)
   const zoomBy = useView(s => s.zoomBy)
+  const freeCam = useView(s => s.freeCam)
+  const toggleFreeCam = useView(s => s.toggleFreeCam)
   const reviewOpen = useReview(s => s.open)
   const reviewGameId = useReview(s => s.gameId)
   const panel = useApp(s => s.panel)
@@ -113,12 +129,12 @@ export function Hud() {
       <div id="opp" className="glass">
         <span className={`dot ${app.engine}`} title={`Engine: ${app.engine}`} />
         <span>{g.mode === 'drill' ? 'Training' : g.mode === 'online' ? `${online.opponent || 'Online'}${online.status === 'ended' ? ' · left' : ''}` : `Stockfish · ${level.label}`}</span>
-        <span className={`clock ${g.turn() === opp && !g.result.over ? 'on' : ''}`}>{fmt(g.clock[opp])}</span>
+        <ClockView color={opp} />
       </div>
 
       <div id="me" className="glass">
         <span>You</span>
-        <span className={`clock ${g.turn() === g.playerColor && !g.result.over ? 'on' : ''}`}>{fmt(g.clock[g.playerColor])}</span>
+        <ClockView color={g.playerColor} />
       </div>
 
       {training ? <TrainPanel /> : reviewOpen ? <ReviewPanel key={reviewGameId} /> : <aside id="coach" className="glass">
@@ -153,6 +169,7 @@ export function Hud() {
           </button>
         ))}
         <span className="sep" />
+        <button className={freeCam ? 'on' : ''} onClick={toggleFreeCam} title={freeCam ? 'Free camera: left-drag rotates' : 'Camera locked to right-drag / two fingers. Click to allow left-drag rotate.'}>{freeCam ? '🔓' : '🔒'}</button>
         <button onClick={() => zoomBy(0.8)} aria-label="Zoom in" title="Zoom in">＋</button>
         <button onClick={() => zoomBy(1.25)} aria-label="Zoom out" title="Zoom out">－</button>
       </nav>}
@@ -174,7 +191,7 @@ export function Hud() {
 }
 
 function PromotionPicker({ color }: { color: Color }) {
-  const g = useGame()
+  const g = useGame(useShallow(noClock))
   const icons: Record<string, string> = color === 'w' ? { q: '♕', r: '♖', b: '♗', n: '♘' } : { q: '♛', r: '♜', b: '♝', n: '♞' }
   return (
     <div className="modal-wrap">
@@ -191,7 +208,7 @@ function PromotionPicker({ color }: { color: Color }) {
 }
 
 function ResultCard() {
-  const { result, playerColor } = useGame()
+  const { result, playerColor } = useGame(useShallow(s => ({ result: s.result, playerColor: s.playerColor })))
   const set = useApp(s => s.set)
   const win = result.winner === playerColor
   const title = result.winner == null ? 'Draw' : win ? 'You win! 🏆' : 'Stockfish wins'
@@ -211,7 +228,7 @@ function ResultCard() {
 }
 
 function NewGameDialog() {
-  const g = useGame()
+  const g = useGame(useShallow(noClock))
   const set = useApp(s => s.set)
   const [color, setColor] = useState<Color | 'r'>(g.playerColor)
   const [level, setLevel] = useState(g.level)

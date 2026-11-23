@@ -13,6 +13,8 @@ export class Engine {
   private worker: Worker | null = null
   private listeners = new Set<Listener>()
   private queue: Promise<unknown> = Promise.resolve()
+  /** The search running now; background evals may be cut short when something urgent is queued. */
+  private running: { interruptible: boolean } | null = null
   ready: Promise<boolean>
   /** True once Stockfish answered readyok — even if that came after the start timeout. */
   isReady = false
@@ -70,7 +72,7 @@ export class Engine {
   }
 
   /** Full-strength analysis. Score is from White's view. */
-  analyse(fen: string, depth: number): Promise<{ score: Score; bestMove: UciMove | null; pv: string[] } | null> {
+  analyse(fen: string, depth: number, interruptible = false): Promise<{ score: Score; bestMove: UciMove | null; pv: string[]; depth: number } | null> {
     const run = async () => {
       await this.ready
       if (!this.isReady || !this.worker) return null
@@ -82,13 +84,16 @@ export class Engine {
       const line = await this.waitFor(l => l.startsWith('bestmove'), `go depth ${depth}`)
       this.listeners.delete(grab)
       const info = last as UciInfo | null
-      return { score: finalScore(fen, info), bestMove: parseBestMove(line), pv: info?.pv ?? [] }
+      return { score: finalScore(fen, info), bestMove: parseBestMove(line), pv: info?.pv ?? [], depth: info?.depth ?? depth }
     }
-    return this.enqueue(run)
+    return this.enqueue(run, interruptible)
   }
 
-  private enqueue<T>(run: () => Promise<T>): Promise<T> {
-    const p = this.queue.then(run, run)
+  private enqueue<T>(run: () => Promise<T>, interruptible = false): Promise<T> {
+    // An urgent request (move, hint, guard, review) stops a background eval: Stockfish answers bestmove at once.
+    if (!interruptible && this.running?.interruptible) this.send('stop')
+    const job = async () => { this.running = { interruptible }; try { return await run() } finally { this.running = null } }
+    const p = this.queue.then(job, job)
     this.queue = p.catch(() => undefined)
     return p
   }

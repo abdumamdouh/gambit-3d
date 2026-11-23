@@ -50,8 +50,11 @@ export async function showHint() {
   useCoach.getState().set({ hint: { from: r.bestMove.from, to: r.bestMove.to, san }, hintsUsed: useCoach.getState().hintsUsed + 1, score: r.score })
 }
 
-/** Eval bar: analyse every new position. */
+/** Eval bar: analyse every new position (background work: urgent requests interrupt it). */
 export async function refreshEval(fen: string) {
-  const s = await scoreOf(fen, 12)
+  const known = recall(fen)
+  const r = known ? null : await engine.analyse(fen, 12, true)
+  if (r && r.depth >= 10) remember(fen, r.score) // an interrupted (shallow) eval is shown but never cached
+  const s = known ?? r?.score
   if (s && useGame.getState().fen === fen) useCoach.getState().set({ score: s })
 }

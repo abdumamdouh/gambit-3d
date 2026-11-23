@@ -4,7 +4,8 @@ export type Quality = 'high' | 'medium' | 'low' | 'flat'
 interface Settings { quality: Quality; sound: boolean; voice: boolean; set(p: Partial<Pick<Settings, 'quality' | 'sound' | 'voice'>>): void }
 
 const KEY = 'g3d.settings'
-const hasWebGL = () => { try { return !!document.createElement('canvas').getContext('webgl2') } catch { return false } }
+// No probe context: creating a throwaway WebGL context on every load costs time and GPU memory.
+const hasWebGL = () => typeof window !== 'undefined' && 'WebGL2RenderingContext' in window
 const load = (): Pick<Settings, 'quality' | 'sound' | 'voice'> => {
   const d = { quality: (hasWebGL() ? 'high' : 'flat') as Quality, sound: true, voice: false }
   try { return { ...d, ...JSON.parse(localStorage.getItem(KEY) ?? '{}') } } catch { return d }

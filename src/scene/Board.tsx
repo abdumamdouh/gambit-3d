@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import type { ThreeEvent } from '@react-three/fiber'
 import { M, glow, labelTexture, sqPos } from './geometry'
 import { onSquareClick } from './input'
+import { useView } from './view'
 import { useGame } from '../game/store'
 
 export function Board() {
@@ -46,12 +47,28 @@ export function Board() {
   const color = useGame(s => s.playerColor)
   useEffect(() => { group.children.forEach(c => { if (c.userData.label) c.rotation.set(-Math.PI / 2, 0, color === 'b' ? Math.PI : 0) }) }, [color, group])
 
+  // Input: one invisible 8×8 plane. Raycasting 64 boxes + frame on every mouse move cost up to 800 ms.
+  const square = (e: ThreeEvent<PointerEvent | MouseEvent>) => {
+    const f = Math.floor(e.point.x + 4), r = Math.floor(4 - e.point.z)
+    return f >= 0 && f < 8 && r >= 0 && r < 8 ? String.fromCharCode(97 + f) + (r + 1) : null
+  }
   const click = (e: ThreeEvent<MouseEvent>) => {
-    const sq = e.object.userData.square as string | undefined
-    if (!sq || e.delta > 5) return
+    const sq = square(e)
+    if (!sq || e.delta > 8) return
     e.stopPropagation()
     onSquareClick(sq)
   }
+  const setHover = useView(s => s.setHover)
 
-  return <primitive object={group} onClick={click} />
+  return (
+    <>
+      <primitive object={group} />
+      <mesh rotation-x={-Math.PI / 2} position-y={0.002} onClick={click}
+        onPointerMove={e => { e.stopPropagation(); setHover(square(e)) }}
+        onPointerOut={() => setHover(null)}>
+        <planeGeometry args={[8, 8]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
+      </mesh>
+    </>
+  )
 }

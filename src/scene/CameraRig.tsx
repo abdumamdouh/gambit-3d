@@ -23,6 +23,7 @@ export function CameraRig() {
   const color = useGame(s => s.playerColor)
   const gameId = useGame(s => s.gameId)
   const zoomNonce = useView(s => s.zoomNonce)
+  const freeCam = useView(s => s.freeCam)
   const tw = useRef({ t: 1, dur: 1.4, p0: new THREE.Vector3(), p1: new THREE.Vector3(), t0: new THREE.Vector3(), t1: new THREE.Vector3() })
   const first = useRef(true)
 
@@ -81,6 +82,9 @@ export function CameraRig() {
       maxPolarAngle={1.38}
       autoRotateSpeed={0.6}
       onStart={() => { tw.current.t = 1 }}
+      // Left button selects pieces. Rotate with right-drag or two fingers (or turn on Free camera).
+      mouseButtons={{ LEFT: freeCam ? THREE.MOUSE.ROTATE : (-1 as THREE.MOUSE), MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE }}
+      touches={{ ONE: freeCam ? THREE.TOUCH.ROTATE : (-1 as THREE.TOUCH), TWO: THREE.TOUCH.DOLLY_ROTATE }}
     />
   )
 }
