@@ -17,6 +17,7 @@ initSound()
 initVoice()
 import { useTrain, checkTrainResult } from './train/session'
 import { useOnline, joinFriendGame, initLichess } from './online/session'
+import { joinSync } from './polish/sync'
 
 /** Engine plays whenever it is not the player's turn. Stale replies are dropped. */
 function useEngineTurn() {
@@ -71,6 +72,8 @@ function useClock() {
 /** Lichess OAuth return and ?join= invite links. */
 function useOnlineEntry() {
   useEffect(() => {
+    const sync = new URLSearchParams(location.search).get('sync')
+    if (sync) { history.replaceState(null, '', '/'); useApp.getState().set({ dialog: false, panel: 'progress' }); joinSync(sync) }
     const join = new URLSearchParams(location.search).get('join')
     if (join) { history.replaceState(null, '', '/'); useApp.getState().set({ dialog: false, panel: 'online' }); joinFriendGame(join) }
     void initLichess().then(() => { if (useOnline.getState().user && !join) useApp.getState().set({ panel: 'online' }) })

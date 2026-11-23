@@ -15,6 +15,8 @@ Spec: `docs/superpowers/specs/2026-11-23-gambit-3d-design.md` · Loops: `docs/lo
 | 7 | M5a Online — Lichess OAuth + Board API | done | main | 2026-11-23 |
 | 8 | M5b Online — P2P friend link | done | main | 2026-11-23 |
 | 9 | M6 Polish — themes, sounds, PGN, mobile, presets | done | main | 2026-11-23 |
+| 11 | Hardening — code review fixes (12), Playwright e2e, CI, FPS check | done | main | 2026-11-23 |
+| 12 | Openings vs masters, voice coach, PWA offline, device sync, auto quality | done | main | 2026-11-23 |
 | 10 | My Coach — style analysis across games, personal drills from own mistakes, Qwen study plan, replay history | done | main | 2026-11-23 (owner request) |
 
 ### 2 — M2a Coach

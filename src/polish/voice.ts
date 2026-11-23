@@ -12,7 +12,9 @@ const SAN = /\b(O-O-O|O-O|([KQRBN])?([a-h])?([1-8])?(x)?([a-h][1-8])(?:=([QRBN])
 export function speakable(text: string): string {
   return text
     .replace(/<[^>]+>/g, '')
-    .replace(/[\p{Extended_Pictographic}☀-➿️]/gu, '')
+    .replace(/\p{Extended_Pictographic}/gu, '')
+    .replace(/[\u2600-\u27BF]/g, '')
+    .replace(/\uFE0F/g, '')
     .replace(SAN, (all, castle: string, piece: string, file: string, _rank: string, take: string, to: string, promo: string, mark: string) => {
       let s = castle === 'O-O-O' ? 'castles long' : castle === 'O-O' ? 'castles' : `${piece ? P[piece] + ' ' : ''}${take ? `${piece ? '' : file + ' '}takes ` : ''}${to}${promo ? ` promotes to ${P[promo]}` : ''}`
       if (mark === '+') s += ', check'

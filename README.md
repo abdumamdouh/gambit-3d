@@ -41,6 +41,21 @@ npm run build    # production build in dist/
 - Optional study-plan letter from your local Qwen (LM Studio). Only summary numbers are sent; any move Qwen names that is not in your data is rejected
 - Replay and re-review any saved game from 📈 Progress
 
+## More
+- 📖 **Openings vs the masters** (My Coach): your opening moves checked against the Lichess masters database; drill the main moves where you deviate
+- 🗣 **Voice coach**: hints, warnings, lessons and review explanations read aloud (Style → Voice coach)
+- ⬇ **Install as an app**: works offline after the first visit — Stockfish included
+- 📲 **Device sync** (Progress): link two devices; games, lessons and puzzle progress merge both ways, device-to-device, no account
+- ⚙ Auto quality: drops graphics a step on slow devices
+
+## Testing
+```bash
+npm test          # unit tests (vitest)
+npm run e2e       # build + Playwright: desktop, phone layout, offline PWA
+P2P=1 npx playwright test -g "friend game"   # optional, headed: WebRTC friend game
+```
+CI (GitHub Actions) runs lint, unit, build and e2e on every push.
+
 ## Stack
 Vite · React 19 · TypeScript · three.js · React Three Fiber · drei · postprocessing · chess.js · zustand · Stockfish.js
 

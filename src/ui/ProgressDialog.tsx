@@ -6,6 +6,7 @@ import { useGame } from '../game/store'
 import { runReview } from '../coach/review-store'
 import { useApp } from './app-store'
 import { exitTrain } from '../train/session'
+import { useSync, hostSync } from '../polish/sync'
 import { leaveOnline } from '../online/session'
 
 // Validated with dataviz/validate_palette.js on #14161d (dark): all checks pass.
@@ -85,6 +86,7 @@ export function ProgressDialog({ onClose }: { onClose(): void }) {
   const [msg, setMsg] = useState('')
   const file = useRef<HTMLInputElement>(null)
   const pgnFile = useRef<HTMLInputElement>(null)
+  const sync = useSync()
   const load = () => allGames().then(g => setGames(g.sort((a, b) => a.date - b.date)))
   useEffect(() => { load() }, [])
 
@@ -158,6 +160,10 @@ export function ProgressDialog({ onClose }: { onClose(): void }) {
           }} />
         </div>
         {msg && <p className="small mute">{msg}</p>}
+        <h4>📲 Sync with another device</h4>
+        <p className="small mute">Copies games, lessons and puzzle progress both ways. Direct device-to-device: no account, nothing stored on a server.</p>
+        {sync.link ? <input className="link" readOnly value={sync.link} onFocus={e => e.target.select()} /> : <button className="ghost" onClick={hostSync} disabled={sync.status === 'connecting'}>Create sync link</button>}
+        {sync.message && <p className={`note ${sync.status === 'error' ? 'failed' : sync.status === 'done' ? 'solved' : 'playing'}`}>{sync.message}</p>}
       </div>
     </div>
   )
