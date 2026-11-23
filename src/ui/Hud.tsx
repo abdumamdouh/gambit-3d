@@ -12,6 +12,8 @@ import { EvalBar, GuardModal, ReviewPanel, Toggles } from './CoachUi'
 import { ProgressDialog } from './ProgressDialog'
 import { ThemePicker } from './ThemePicker'
 import { AcademyDialog, TacticsDialog, TrainPanel } from './TrainUi'
+import { OnlineDialog } from './OnlineUi'
+import { useOnline, resignOnline, leaveOnline } from '../online/session'
 import { useTrain, exitTrain } from '../train/session'
 
 const NAMES: Record<PieceType, string> = { p: 'Pawn', n: 'Knight', b: 'Bishop', r: 'Rook', q: 'Queen', k: 'King' }
@@ -42,6 +44,7 @@ function useCoachText(): string {
   const checking = useCoach(s => s.checking)
   const legalMoves = useGame(s => s.legalMoves)
   if (result.over) return ''
+  if (useGame.getState().mode === 'online') return thinking ? '' : 'Online game: the coach stays quiet for fair play. Review the game when it ends.'
   if (selected) {
     const p = pieces.find(x => !x.captured && x.square === selected)
     if (p) {
@@ -73,6 +76,8 @@ export function Hud() {
   const panel = useApp(s => s.panel)
   const setPanel = (p: typeof panel) => useApp.getState().set({ panel: p })
   const training = useTrain(s => s.kind !== null)
+  const online = useOnline()
+  const isOnline = g.mode === 'online'
   const coach = useCoachText()
   const movesRef = useRef<HTMLDivElement>(null)
   const opp: Color = g.playerColor === 'w' ? 'b' : 'w'
@@ -90,6 +95,7 @@ export function Hud() {
       <div id="tools">
         <button onClick={() => setPanel('academy')} title="Academy">🎓<span> Academy</span></button>
         <button onClick={() => setPanel('tactics')} title="Tactics trainer">⚔<span> Tactics</span></button>
+        <button onClick={() => setPanel('online')} title="Play online">🌐<span> Online</span></button>
         <button onClick={() => setPanel('progress')} title="Your progress">📈<span> Progress</span></button>
         <button onClick={() => setPanel('style')} title="Board style">🎨<span> Style</span></button>
       </div>
@@ -97,7 +103,7 @@ export function Hud() {
 
       <div id="opp" className="glass">
         <span className={`dot ${app.engine}`} title={`Engine: ${app.engine}`} />
-        <span>{g.mode === 'drill' ? 'Training' : g.mode === 'online' ? 'Online' : `Stockfish · ${level.label}`}</span>
+        <span>{g.mode === 'drill' ? 'Training' : g.mode === 'online' ? `${online.opponent || 'Online'}${online.status === 'ended' ? ' · left' : ''}` : `Stockfish · ${level.label}`}</span>
         <span className={`clock ${g.turn() === opp && !g.result.over ? 'on' : ''}`}>{fmt(g.clock[opp])}</span>
       </div>
 
@@ -120,11 +126,11 @@ export function Hud() {
         </div>
         <div className="actions">
           <button onClick={() => app.set({ dialog: true })}>New game</button>
-          <button onClick={() => g.undo()} disabled={!g.history.length || app.thinking}>↶ Undo</button>
-          <button onClick={() => g.resign()} disabled={g.result.over || !g.history.length}>Resign</button>
+          <button onClick={() => g.undo()} disabled={!g.history.length || app.thinking || isOnline}>↶ Undo</button>
+          <button onClick={() => (isOnline ? resignOnline() : g.resign())} disabled={g.result.over || !g.history.length}>Resign</button>
         </div>
         <div className="actions">
-          <button className="hint" onClick={() => showHint()} disabled={g.result.over || app.thinking || g.turn() !== g.playerColor}>💡 Hint</button>
+          <button className="hint" onClick={() => showHint()} disabled={g.result.over || app.thinking || g.turn() !== g.playerColor || isOnline}>💡 Hint</button>
           <button onClick={() => runReview()} disabled={!g.result.over}>🔍 Review</button>
         </div>
         <Toggles />
@@ -151,6 +157,7 @@ export function Hud() {
       {panel === 'style' && <ThemePicker onClose={() => setPanel(null)} />}
       {panel === 'academy' && <AcademyDialog onClose={() => setPanel(null)} />}
       {panel === 'tactics' && <TacticsDialog onClose={() => setPanel(null)} />}
+      {panel === 'online' && <OnlineDialog onClose={() => setPanel(null)} />}
     </>
   )
 }
@@ -201,6 +208,7 @@ function NewGameDialog() {
   const start = () => {
     const c: Color = color === 'r' ? (Math.random() < 0.5 ? 'w' : 'b') : color
     exitTrain()
+    leaveOnline()
     g.newGame({ color: c, level, minutes })
     set({ dialog: false })
     useView.getState().setCam('player')

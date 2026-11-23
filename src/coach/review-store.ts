@@ -46,7 +46,7 @@ export async function runReview() {
   const plies: ReviewedPly[] = history.map((m, i) => ({ ...reviewPly(fens[i], m, an[i], an[i + 1], i + 1), phase: phaseOf(fens[i], i + 1) }))
   const { result, playerColor, level } = useGame.getState()
   let record: GameRecord | null = null
-  if (result.over && plies.filter(p => p.color === playerColor).length >= 3) {
+  if (result.over && useGame.getState().mode === 'game' && plies.filter(p => p.color === playerColor).length >= 3) {
     const pgnChess = new Chess()
     history.forEach(h => pgnChess.move(h.san))
     record = buildRecord(plies, {

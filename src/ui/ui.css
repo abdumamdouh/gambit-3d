@@ -197,3 +197,12 @@ table.games .win{color:#7ee08a}table.games .loss{color:#ff6b6b}
   .train .lesson-text{font-size:13px;margin:4px 0}
 }
 .academy,.progress-dlg{margin-top:56px;max-height:calc(100vh - 100px)}
+
+/* ---------- M5 online ---------- */
+.online-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+.online-grid section{background:rgba(255,255,255,.03);border:1px solid var(--edge);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.online-grid h4{margin:0;font-family:Fraunces,serif;font-size:17px;color:var(--gold2)}
+.online-grid .primary{margin-top:auto}
+input.link{width:100%;background:#0c0d12;color:var(--text);border:1px solid var(--edge);border-radius:10px;padding:9px;font:12px ui-monospace,monospace}
+.linkish{background:none;border:0;color:var(--teal);padding:0;text-decoration:underline}
+@media (max-width:760px){.online-grid{grid-template-columns:1fr}}

@@ -11,6 +11,7 @@ import { useCoach } from './coach/coach-store'
 import { useReview, runReview } from './coach/review-store'
 import './scene/themes'
 import { useTrain, checkTrainResult } from './train/session'
+import { useOnline, joinFriendGame, initLichess } from './online/session'
 
 /** Engine plays whenever it is not the player's turn. Stale replies are dropped. */
 function useEngineTurn() {
@@ -45,7 +46,7 @@ function useCoachLoop() {
   const over = useGame(s => s.result.over)
   useEffect(() => { useCoach.getState().set({ hint: null, guard: null }) }, [fen])
   useEffect(() => { useCoach.getState().set({ score: null, hintsUsed: 0 }); useReview.getState().set({ open: false, status: 'idle', gameId: -1 }) }, [gameId])
-  useEffect(() => { if (!useApp.getState().dialog) void refreshEval(fen) }, [fen])
+  useEffect(() => { if (!useApp.getState().dialog && useGame.getState().mode !== 'online') void refreshEval(fen) }, [fen])
   useEffect(() => { const s = useGame.getState(); if (over && s.mode === 'game' && !useTrain.getState().kind && s.history.length >= 6) void runReview() }, [over])
   useEffect(() => { checkTrainResult() }, [fen, over])
 }
@@ -62,9 +63,21 @@ function useClock() {
   }, [])
 }
 
+/** Lichess OAuth return and ?join= invite links. */
+function useOnlineEntry() {
+  useEffect(() => {
+    const join = new URLSearchParams(location.search).get('join')
+    if (join) { history.replaceState(null, '', '/'); useApp.getState().set({ dialog: false, panel: 'online' }); joinFriendGame(join) }
+    void initLichess().then(() => { if (useOnline.getState().user && !join) useApp.getState().set({ panel: 'online' }) })
+  }, [])
+  const status = useOnline(s => s.status)
+  useEffect(() => { if (status === 'playing') useApp.getState().set({ panel: null, dialog: false }) }, [status])
+}
+
 export default function App() {
   useEngineTurn()
   useCoachLoop()
+  useOnlineEntry()
   useClock()
   return (
     <>
