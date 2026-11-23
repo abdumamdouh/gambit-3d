@@ -1,5 +1,7 @@
 # ♛ Gambit 3D
 
+**Play it:** https://gambit-3d-chess.vercel.app
+
 A cinematic 3D chess game that teaches you. Play Stockfish in a studio-lit 3D scene, learn how every piece moves, and (soon) get coached, track your progress, train tactics and play people online.
 
 ## Now (M1 · Play)

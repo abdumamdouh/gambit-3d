@@ -6,7 +6,7 @@ Spec: `docs/superpowers/specs/2026-11-23-gambit-3d-design.md` · Loops: `docs/lo
 
 | # | Item | Status | Branch | Notes |
 | - | ---- | ------ | ------ | ----- |
-| 1 | M1 Play — 3D board, full rules, engine levels, cameras | in progress | main | built in session 2026-11-23 |
+| 1 | M1 Play — 3D board, full rules, engine levels, cameras | done | main | live 2026-11-23: https://gambit-3d-chess.vercel.app |
 | 2 | M2a Coach — eval bar, hint, blunder guard | not started | | |
 | 3 | M2b Game review — labels, 3D arrows, explanations (templates + Qwen) | not started | | |
 | 4 | M2c Progress — Skill Report, IndexedDB, dashboard, weekly verdict | not started | | |
@@ -53,6 +53,9 @@ Spec: `docs/superpowers/specs/2026-11-23-gambit-3d-design.md` · Loops: `docs/lo
 ## Carry-forward
 
 (Findings raised by verifiers on out-of-scope problems. Drained BEFORE new backlog rows.)
+
+- Rank labels read upside-down when playing Black (labels sit on the left frame edge only). Fix in M6 or earlier.
+- Bundle is 392 kB gzip in one chunk; code-split the scene if first paint gets slow.
 
 ## Loop log
 
