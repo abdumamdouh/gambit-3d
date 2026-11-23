@@ -1,6 +1,7 @@
 import { Chess } from 'chess.js'
 import { goCommand, setupCommands, type Level } from './levels'
-import { parseBestMove, type UciMove } from './uci'
+import { parseBestMove, parseInfo, toWhitePov, type UciInfo, type UciMove } from './uci'
+import type { Score } from '../coach/eval'
 import { fallbackMove } from './fallback'
 
 const ENGINE_URL = '/engine/stockfish-17.1-lite-single-03e3232.js'
@@ -52,6 +53,33 @@ export class Engine {
       const line = await this.waitFor(l => l.startsWith('bestmove'), goCommand(level))
       return parseBestMove(line) ?? fallbackMove(chess)
     }
+    return this.enqueue(run)
+  }
+
+  /** Full-strength analysis. Score is from White's view. */
+  analyse(fen: string, depth: number): Promise<{ score: Score; bestMove: UciMove | null; pv: string[] } | null> {
+    const run = async () => {
+      if (!(await this.ready) || !this.worker) return null
+      const turn = fen.split(' ')[1] as 'w' | 'b'
+      let last: UciInfo | null = null
+      const grab: Listener = l => { const i = parseInfo(l); if (i && !l.includes(' multipv 2')) last = i }
+      this.listeners.add(grab)
+      setupCommands({ id: 0, label: '', skill: 20 }).forEach(c => this.send(c))
+      this.send(`position fen ${fen}`)
+      const line = await this.waitFor(l => l.startsWith('bestmove'), `go depth ${depth}`)
+      this.listeners.delete(grab)
+      const info = last as UciInfo | null
+      if (!info) {
+        // No legal move: mate or stalemate. Report the side to move as lost/drawn.
+        const c = new Chess(fen)
+        return { score: c.isCheckmate() ? { mate: turn === 'w' ? -1 : 1 } : { cp: 0 }, bestMove: null, pv: [] }
+      }
+      return { score: toWhitePov(info, turn), bestMove: parseBestMove(line), pv: info.pv }
+    }
+    return this.enqueue(run)
+  }
+
+  private enqueue<T>(run: () => Promise<T>): Promise<T> {
     const p = this.queue.then(run, run)
     this.queue = p.catch(() => undefined)
     return p

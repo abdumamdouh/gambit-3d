@@ -1,3 +1,5 @@
+import type { Score } from '../coach/eval'
+
 export interface UciMove { from: string; to: string; promotion?: string }
 export interface UciInfo { depth: number; scoreCp?: number; mate?: number; pv: string[] }
 
@@ -15,4 +17,10 @@ export function parseInfo(line: string): UciInfo | null {
   const depth = +(/ depth (\d+)/.exec(line)?.[1] ?? 0)
   const pv = / pv (.+)$/.exec(line)?.[1].trim().split(/\s+/) ?? []
   return score[1] === 'cp' ? { depth, scoreCp: +score[2], pv } : { depth, mate: +score[2], pv }
+}
+
+/** UCI scores are from the side to move; convert to White's view. */
+export function toWhitePov(i: UciInfo, turn: 'w' | 'b'): Score {
+  const k = turn === 'w' ? 1 : -1
+  return i.mate !== undefined ? { mate: i.mate * k } : { cp: (i.scoreCp ?? 0) * k }
 }

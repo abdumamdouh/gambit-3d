@@ -41,3 +41,10 @@ describe('fallback', () => {
     expect(c.moves({ verbose: true }).some(x => x.from === m.from && x.to === m.to)).toBe(true)
   })
 })
+
+import { toWhitePov } from './uci'
+describe('toWhitePov', () => {
+  it('keeps white-to-move score', () => expect(toWhitePov({ scoreCp: 40, depth: 1, pv: [] }, 'w')).toEqual({ cp: 40 }))
+  it('flips black-to-move score', () => expect(toWhitePov({ scoreCp: 40, depth: 1, pv: [] }, 'b')).toEqual({ cp: -40 }))
+  it('flips mate', () => expect(toWhitePov({ mate: 2, depth: 1, pv: [] }, 'b')).toEqual({ mate: -2 }))
+})
