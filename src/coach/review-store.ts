@@ -43,7 +43,7 @@ export async function runReview() {
     an.push(a ?? { score: { cp: 0 }, bestMove: null, pv: [] })
     useReview.setState({ progress: (i + 1) / fens.length })
   }
-  const plies: ReviewedPly[] = history.map((m, i) => ({ ...reviewPly(fens[i], m, an[i], an[i + 1], i + 1), phase: phaseOf(fens[i], i + 1) }))
+  const plies: ReviewedPly[] = history.map((m, i) => ({ ...reviewPly(fens[i], m, an[i], an[i + 1], i + 1), phase: phaseOf(fens[i], i + 1), fen: fens[i] }))
   const { result, playerColor, level } = useGame.getState()
   let record: GameRecord | null = null
   if (result.over && useGame.getState().mode === 'game' && plies.filter(p => p.color === playerColor).length >= 3) {

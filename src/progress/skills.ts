@@ -4,7 +4,10 @@ import type { PlyReview } from '../coach/review'
 import { gameAccuracy } from '../coach/eval'
 
 export type Phase = 'opening' | 'middlegame' | 'endgame'
-export type ReviewedPly = PlyReview & { phase: Phase }
+export type ReviewedPly = PlyReview & { phase: Phase; fen?: string }
+
+/** One of my inaccurate moves, kept so lessons can be built from it. */
+export interface Mistake { fen: string; san: string; best: string; bestSan: string; label: Label; tags: PlyReview['tags']; phase: Phase; loss: number; ply: number }
 export interface Skills { pieceSafety: number; development: number; tactics: number | null; endgame: number | null; calculation: number }
 export interface GameRecord {
   id: string
@@ -19,6 +22,11 @@ export interface GameRecord {
   phases: Record<Phase, number | null>
   skills: Skills
   pgn: string
+  // Added with the style coach (older records may not have them).
+  mistakes?: Mistake[]
+  opening?: string
+  castlePly?: number | null
+  earlyQueen?: boolean
 }
 
 export const LEVEL_ELO = [400, 700, 1000, 1320, 1600, 1900, 2300, 2800]
@@ -61,6 +69,12 @@ export function buildRecord(all: ReviewedPly[], meta: { color: Color; level: num
       calculation: clamp(100 - 20 * counts.blunder - 8 * counts.mistake),
     },
     pgn: meta.pgn,
+    mistakes: mine
+      .filter(p => (p.label === 'inaccuracy' || p.label === 'mistake' || p.label === 'blunder') && p.best && p.fen)
+      .map(p => ({ fen: p.fen!, san: p.san, best: p.best!.from + p.best!.to + (p.best!.promotion ?? ''), bestSan: p.bestSan ?? '', label: p.label, tags: p.tags, phase: p.phase, loss: p.loss, ply: p.ply })),
+    opening: all.slice(0, 4).map(p => p.san).join(' '),
+    castlePly: mine.find(p => p.san.startsWith('O-O'))?.ply ?? null,
+    earlyQueen: mine.some(p => p.ply <= 10 && p.san.startsWith('Q')),
   }
 }
 

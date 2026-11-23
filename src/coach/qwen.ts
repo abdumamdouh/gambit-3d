@@ -27,8 +27,14 @@ export async function qwenExplain(p: PlyReview, uciPv: string[]): Promise<string
     p.captured ? `After the move, the opponent can capture the ${p.captured}.` : '',
     p.mateIn ? `Mate in ${p.mateIn} is involved (${p.tags.includes('missedMate') ? 'the student missed it' : 'the student allowed it'}).` : '',
   ].filter(Boolean).join(' ')
+  const text = await askQwen('You are a warm chess coach for a beginner. Answer in at most 3 short sentences. Use ONLY the moves and squares given in the facts. Never name any other move or square. End with one simple rule the student can remember.', facts, 160)
+  return text && onlyKnownMoves(text, sans, squares) ? text : null
+}
+
+/** One chat turn with LM Studio. Thinking is skipped by prefilling an empty think block. */
+export async function askQwen(system: string, user: string, maxTokens: number): Promise<string | null> {
   const ctrl = new AbortController()
-  const t = setTimeout(() => ctrl.abort(), 20000)
+  const t = setTimeout(() => ctrl.abort(), 30000)
   try {
     const r = await fetch(URL, {
       method: 'POST',
@@ -36,19 +42,18 @@ export async function qwenExplain(p: PlyReview, uciPv: string[]): Promise<string
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 160,
+        max_tokens: maxTokens,
         temperature: 0.4,
         messages: [
-          { role: 'system', content: 'You are a warm chess coach for a beginner. Answer in at most 3 short sentences. Use ONLY the moves and squares given in the facts. Never name any other move or square. End with one simple rule the student can remember.' },
-          { role: 'user', content: facts },
+          { role: 'system', content: system },
+          { role: 'user', content: user },
           { role: 'assistant', content: '<think>\n\n</think>\n\n' },
         ],
       }),
     })
     if (!r.ok) return null
     const j = await r.json()
-    const text = String(j.choices?.[0]?.message?.content ?? '').replace(/<think>[\s\S]*?<\/think>/g, '').trim()
-    return text && onlyKnownMoves(text, sans, squares) ? text : null
+    return String(j.choices?.[0]?.message?.content ?? '').replace(/<think>[\s\S]*?<\/think>/g, '').trim() || null
   } catch {
     return null
   } finally {

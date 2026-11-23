@@ -1,8 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { buildRecord, verdict, ratingEstimate, type GameRecord } from './skills'
-import type { PlyReview } from '../coach/review'
+import { buildRecord, verdict, ratingEstimate, type GameRecord, type ReviewedPly } from './skills'
 
-const ply = (o: Partial<PlyReview & { phase: 'opening' | 'middlegame' | 'endgame' }>): PlyReview & { phase: 'opening' | 'middlegame' | 'endgame' } => ({
+const ply = (o: Partial<ReviewedPly>): ReviewedPly => ({
   ply: 1, san: 'e4', color: 'w', from: 'e2', to: 'e4', before: { cp: 0 }, after: { cp: 0 }, best: null, bestSan: null, pvSan: [],
   loss: 0, label: 'good', accuracy: 90, tags: [], phase: 'opening', ...o,
 })
@@ -51,4 +50,24 @@ describe('ratingEstimate', () => {
     const many = [...Array(10)].map((_, i) => rec(i, 70, 1, 'loss')).concat([rec(50, 70, 8, 'win')])
     expect(ratingEstimate(many)).toBe(0)
   })
+})
+
+describe('buildRecord history fields', () => {
+  const plies = [
+    ply({ ply: 1, san: 'e4', accuracy: 100, label: 'best', fen: 'F0' }),
+    ply({ ply: 2, color: 'b', san: 'e5', label: 'blunder', fen: 'F1' }),
+    ply({ ply: 3, san: 'Qh5', from: 'd1', accuracy: 40, label: 'mistake', loss: 0.12, tags: ['hangs'], best: { from: 'g1', to: 'f3' }, bestSan: 'Nf3', fen: 'F2' }),
+    ply({ ply: 5, san: 'a3', from: 'a2', accuracy: 80, label: 'inaccuracy', loss: 0.06, tags: ['positional'], best: { from: 'f1', to: 'c4' }, bestSan: 'Bc4', fen: 'F4', phase: 'middlegame' }),
+    ply({ ply: 7, san: 'O-O', from: 'e1', fen: 'F6' }),
+  ]
+  const r = buildRecord(plies, { color: 'w', level: 3, result: 'loss', reason: 'checkmate', date: 1, pgn: '' })
+  it('stores only my mistakes, with the position and the better move', () => {
+    expect(r.mistakes).toHaveLength(2)
+    expect(r.mistakes![0]).toMatchObject({ fen: 'F2', san: 'Qh5', best: 'g1f3', bestSan: 'Nf3', label: 'mistake', tags: ['hangs'], phase: 'opening' })
+  })
+  it('stores the opening and when I castled', () => {
+    expect(r.opening).toBe('e4 e5 Qh5 a3')
+    expect(r.castlePly).toBe(7)
+  })
+  it('flags an early queen move', () => expect(r.earlyQueen).toBe(true))
 })
